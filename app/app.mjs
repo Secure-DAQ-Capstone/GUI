@@ -11,7 +11,5 @@ app.use(express.json());// support json encoded bodies
 app.use(express.urlencoded({extended: true}));//incoming objects are strings or arrays
 
 
-app.get('/noservice', (req,resp) => { resp.send('No Service Available') });
-
 
 export default app // useful when started as a module
