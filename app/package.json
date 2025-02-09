@@ -1,6 +1,6 @@
 {
   "scripts":{
-    "start": "node serve.mjs",
+    "start": "node serve.mjs"
   },
   "dependencies": {
     "express": "^4.21.1",

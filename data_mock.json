@@ -1,0 +1,58 @@
+[
+    {
+        "boardId": 101,
+        "timeDataRead": "2024-07-25T10:15:30Z",
+        "data": {
+            "type": "TemperatureSensor",
+            "doubleFields": [
+                {
+                    "label": "Temperature",
+                    "value": 23.5
+                },
+                {
+                    "label": "Humidity",
+                    "value": 58.7
+                }
+            ]
+        },
+        "protocol": "CAN",
+        "originalMessage": "SGVsbG8gV29ybGQ=",  
+        "digitalSignature": 987654321
+    },
+    {
+        "boardId": 102,
+        "timeDataRead": "2024-07-25T11:00:45Z",
+        "data": {
+            "type": "PressureSensor",
+            "doubleFields": [
+                {
+                    "label": "Pressure",
+                    "value": 101.3
+                }
+            ]
+        },
+        "protocol": "Modbus",
+        "originalMessage": "VGVzdCBNZXNzYWdl",
+        "digitalSignature": 123456789
+    },
+    {
+        "boardId": 103,
+        "timeDataRead": "2024-07-25T12:20:10Z",
+        "data": {
+            "type": "FlowMeter",
+            "doubleFields": [
+                {
+                    "label": "FlowRate",
+                    "value": 3.2
+                },
+                {
+                    "label": "TotalVolume",
+                    "value": 50.8
+                }
+            ]
+        },
+        "protocol": "CAN",
+        "originalMessage": "Rmxvd01ldGVyIERhdGE=",
+        "digitalSignature": 112233445
+    }
+]

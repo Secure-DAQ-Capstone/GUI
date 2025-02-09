@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" />
+  <title>Task History Details</title>
+  <script>
+    window.addEventListener("load", async () => {
+      let urlParams = new URLSearchParams(window.location.search);
+      let cardId = urlParams.get("id");
+
+      // Fetch the task details
+      let card = await loadTask(cardId);
+
+      //Check if the card exists
+      if (card) {
+        document.getElementById("cardTitle").innerText = card.title;
+      } 
+      else {
+        alert("Card not found");
+        window.location.href = "index.html";
+      }
+    });
+
+    // Fetch the task details
+    async function loadTask(cardId) {
+      let response = await fetch(`/tasks?id=${cardId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+      }
+
+      let card = await response.json();
+      return card[0];
+    }
+
+    // Fetch the task history details
+    async function getDetails() {
+        let urlParams = new URLSearchParams(window.location.search);
+        // Get the card ID from the URL
+        let cardId = urlParams.get("id");
+        // Get the date of interest from the input field
+        let dateOfInterest = document.getElementById("dateOfInterest").value;
+
+        // Validate the date of interest
+        if (!dateOfInterest) {
+            alert("Please select a date of interest.");
+            return;
+        }
+
+        try {
+            // Fetch the task history details
+            let response = await fetch(`/tasks/history?id=${cardId}&date=${dateOfInterest}`);
+
+            // Check if the task history does not exist
+            if (response.status === 404) {
+            alert("No task history found for the provided date and card ID.");
+            return;
+            }
+
+            if (!response.ok) {
+            throw new Error(`Failed to fetch task history: ${response.statusText}`);
+            }
+
+            let taskHistory = await response.json();
+
+            // Extract data using Object.keys
+            let keys = Object.keys(taskHistory[0].history).map((key) => {
+            return taskHistory[0].history[key];
+            });
+
+            if (keys.length > 0) {
+
+              // Remove any existing history container
+              if (document.getElementsByClassName("historyContainer")[0]) {
+                  document.getElementsByClassName("historyContainer")[0].remove();
+              }
+
+              // Dynamically create the form
+              let container = document.createElement("div");
+              container.className = "historyContainer";
+
+              // Remove any existing generated form
+              let existingForm = document.getElementById("generatedForm");
+              if (existingForm) {
+                  existingForm.remove();
+              }
+
+              // Create a new form element
+              let form = document.createElement("form");
+              form.id = "generatedForm";
+
+              // Loop through keys[0] object to display details
+              for (let [key, value] of Object.entries(keys[0])) {
+                  // Create a label 
+                  let label = document.createElement("label");
+                  let capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+                  label.innerText = `${capitalizedKey}:`;
+                  label.setAttribute("for", key);
+
+                  //Create an input field
+                  let input = document.createElement("span");
+                  input.id = key;
+                  input.innerText = value;
+
+                  //Append the label and input field to the form
+                  form.appendChild(label);
+                  form.appendChild(input);
+              }
+              // Append the form to the history container
+              container.appendChild(form);
+              // Append the container to the app
+              let app = document.getElementById("app");
+              app.appendChild(container);
+            } 
+            else {
+              alert("No task history found for the selected date.");
+            }
+        } 
+        catch (error) {
+            console.error("Error fetching task history:", error);
+            alert("Failed to fetch task history. Please try again.");
+        }
+    }
+
+    // Return to the card details page
+    async function returntoTask() {
+      let urlParams = new URLSearchParams(window.location.search);
+      let cardId = urlParams.get("id");
+      window.location.href = `card-details.html?id=${cardId}`;
+    }
+
+    // Return to the home page
+    async function returnHome() {
+      window.location.href = "index.html";
+    }
+  </script>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="navbar">
+      Edit Card Details
+      <button type="button" id="home" onclick="returnHome()">Home</button>
+      <button type="button" id="home" onclick="returntoTask()">Return to Task</button>
+    </div>
+    <div class="card-details-container">
+      <form>
+        <label for="cardTitle">Get Task Details of Task:</label>
+        <span id="cardTitle"></span>
+
+        <br />
+
+        <label for="dateOfInterest">Date of Interest:</label>
+        <input id="dateOfInterest" type="date" />
+
+        <button type="button" onclick="getDetails()">Get Details</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+

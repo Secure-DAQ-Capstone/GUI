@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" />
+  <title>New Field</title>
+  <script>
+    // Function to retrive the existing fields
+    async function getFields() {
+      try {
+        let response = await fetch("/fields");
+        if (!response.ok) {
+          throw new Error("Failed to fetch fields");
+        }
+        return await response.json();
+      } 
+      catch (err) {
+        console.error("Error:", err);
+        alert("An error occurred while checking the fields.");
+        return [];
+      }
+    }
+
+    // Function to add the new field
+    async function addNewField(newFieldName) {
+      try {
+        let response = await fetch(`/addnewfield/${newFieldName}`, {
+          method: "PUT",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add new field");
+        }
+        return true;
+      } 
+      catch (err) {
+        console.error("Error:", err);
+        alert("An error occurred while adding the new field.");
+        return false;
+      }
+    }
+
+    // Function to add the new field
+    async function newField() {
+      let newFieldName = document.getElementById("newFieldName").value.trim(); // Remove leading/trailing spaces
+      newFieldName = newFieldName.replace(/\s+/g, "").toLowerCase(); // Remove all spaces and convert to lowercase
+
+      if (!newFieldName) {
+        alert("Field name cannot be empty or consist of only spaces.");
+        return;
+      }
+
+      //Handle Special case with duedate
+      if(newFieldName == "duedate"){
+        newFieldName = "dueDate";
+      }
+
+      let existingFields = await getFields();
+
+      // Verify if the field already exists
+      if (existingFields.includes(newFieldName)) {
+        alert("The field name already exists. Please choose a different name.");
+      } 
+      else {// If the field doesn't exist, add the new field
+        let success = await addNewField(newFieldName);
+
+        if (success) {
+          alert(`New field "${newFieldName}" added successfully!`);
+          window.location.href = "index.html";
+        } 
+        else {
+          alert("Failure to add new field. Please try again.");
+        }
+      }
+    }
+
+    // Function to return to the home page
+    async function returnHome() {
+      window.location.href = "index.html";
+    }
+  </script>
+  
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="navbar">
+      Edit Card Details
+      <button type="button" id="home" onclick="returnHome()">Home</button>
+    </div>
+    <div class="card-details-container">
+      <form>
+        <label for="newFieldName">Enter New Field Name:</label>
+        <input id="newFieldName" type="text" />
+
+        <button type="button" onclick="newField()">Submit Changes</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" />
+  <title>Card Details</title>
+  <script>
+    // Function to retrieve the existing fields
+    async function getFields() {
+      try {
+        let response = await fetch("/fields");
+        if (!response.ok) {
+          throw new Error("Failed to fetch fields");
+        }
+
+        return await response.json();
+      } catch (err) {
+        console.error("Error:", err);
+        alert("An error occurred while checking the fields.");
+        return [];
+      }
+    }
+
+    window.addEventListener("load", async () => {
+      let urlParams = new URLSearchParams(window.location.search);
+      let cardId = urlParams.get("id");
+
+      //New Card Logic 
+      if (cardId=='new') {
+        //Default values for new card
+        document.getElementById("title").value = '';
+        document.getElementById("status").value = 'Backlog';
+        document.getElementById("duedate").value = '';
+
+        let form = document.getElementById("details-form");
+
+        //Get the additional fields
+        let additionalFields = await getFields();
+
+        let existingFields = ["title", "status", "dueDate"];
+
+        //Remove the existing fields from the additional fields
+        additionalFields = additionalFields.filter(field => !existingFields.includes(field));
+
+        //Add the additional fields to the form
+        if (additionalFields.length > 0) {
+          additionalFields.forEach(field => {
+            //Create a label for the field
+            let label = document.createElement("label");
+            let capitalizedKey = field.charAt(0).toUpperCase() + field.slice(1);
+            label.innerText = `${capitalizedKey}:`;
+            label.setAttribute("for", field);
+
+            //Create an input element for the field
+            let input = document.createElement("input");
+            input.id = field;
+            input.type = "text";
+            input.value = '';
+
+            //Append the label and input to the form
+            form.appendChild(label);
+            form.appendChild(input);
+          });
+        }
+
+        //Create a button to save the changes and append it to the form
+        let saveButton = document.createElement("button");
+        saveButton.type = "button";
+        saveButton.innerText = "Save Changes";
+        saveButton.addEventListener("click", saveChanges);
+        form.appendChild(saveButton);
+      }
+      else {//Edit Card Logic
+        // Load the card details
+        let card = await loadTask(cardId)
+
+        // If the card is found, populate the form with the card details
+        if (card) {
+          // Populate the form with the card details deafult html
+          document.getElementById("title").value = card.title;
+          document.getElementById("status").value = card.status;
+          document.getElementById("duedate").value = card.dueDate;
+
+          let form = document.getElementById("details-form");
+          for (let key of Object.keys(card)) {
+            // Skip the default fields
+            if (key !== "_id" && key !== "title" && key !== "status" && key !== "dueDate") {
+              // Create a label for the field
+              let label = document.createElement("label");
+              let capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+              label.innerText = `${capitalizedKey}:`;
+              label.setAttribute("for", key);
+              
+              // Create an input element for the field
+              let input = document.createElement("input");
+              input.id = key;
+              input.type = "text";
+              input.value = card[key];
+      
+              // Append the label and input to the form
+              form.appendChild(label);
+              form.appendChild(input);
+
+            }
+          }
+          // Create a button to save the changes and append it to the form
+          let saveButton = document.createElement("button");
+          saveButton.type = "button";
+          saveButton.innerText = "Save Changes";
+          saveButton.addEventListener("click", saveChanges);
+          form.appendChild(saveButton);
+        }
+        else {
+          alert("Card not found");
+          window.location.href = "index.html";
+        }
+      }
+    });
+
+    // Function to update the card status using the backend API
+    async function updateCard(cardId, namefieldUpdate, newStatus) {
+      let response = await fetch(`/tasks/${cardId}/${namefieldUpdate}/${newStatus}`, {
+          method: "PUT",
+      });
+    }
+
+    // Function to add a new card using the backend API
+    async function addNewCard(newCardData) {
+      let response = await fetch(`/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newCardData),
+      });
+    }
+
+    // Function to delete a card using the backend API
+    async function deleteCard(cardId) {
+      let response = await fetch(`/tasks?id=${cardId}`, {
+        method: "DELETE",
+      });
+    }
+
+    // Function to load a task using the backend API
+    async function loadTask(cardId) {
+        let response = await fetch(`/tasks?id=${cardId}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+        }
+
+        // Parse the JSON response
+        let card = await response.json();
+
+        return card[0];
+    }
+
+    // Function to save the changes to the card
+    async function saveChanges() {
+      // Get the card ID from the URL
+      let cardId = new URLSearchParams(window.location.search).get("id");
+
+      // Get the updated field values from the input elements
+      let updatedTitle = document.getElementById("title").value;
+      let updatedStatus = document.getElementById("status").value;
+      let updatedDueDate = document.getElementById("duedate").value;
+
+      // Check if the required fields are filled
+      if(!updatedTitle || !updatedStatus || !updatedDueDate){
+        alert("Title, Status, and DueDate are required");
+        return;
+      }
+
+      // Logic for New Card Scenario
+      if(cardId=='new'){
+
+        let newCardData = {};
+
+        // Get the updated field values from the input elements
+        let formElements = Array.from(document.getElementById("details-form").elements);
+        
+        //Add the fields in the form to the newCardData object
+        formElements.forEach(element => {
+          let key = (element.id==="duedate")?"dueDate":element.id;
+          if (key && element.value) {
+            newCardData[key] = element.value;
+          }
+        });
+
+        //Add the new card to the database
+        await addNewCard(newCardData);
+        alert("New card added successfully!");
+        window.location.href = "index.html";
+      }
+      else{ //Logic for Existing Card Scenario
+        try {
+          // Load the card details
+          let card = await loadTask(cardId);
+
+          // Variable to store the fields to update
+          let fieldsToUpdate = {};
+
+          // Get the updated field values from the input elements
+          let formElements = Array.from(document.getElementById("details-form").elements);
+          formElements.forEach(element => {
+            let key = (element.id==="duedate")?"dueDate":element.id;
+            if ( key && element.value && element.value !== card[key]) {
+              fieldsToUpdate[key] = element.value;
+            }
+          });
+
+          // Update the card with the new field values
+          for (let [field, value] of Object.entries(fieldsToUpdate)) {
+            await updateCard(cardId, field, value);
+          }
+
+          // Check if any changes were made
+          if (Object.keys(fieldsToUpdate).length > 0) {
+            alert("Changes saved successfully!");
+          } 
+          else {
+          alert("No changes were made.");
+          }
+
+          window.location.href = "index.html";
+        } 
+        catch (error) {
+        console.error("Error saving changes:", error);
+        alert("Failed to save changes. Please try again.");
+        }
+      }
+    }
+
+    // Function to delete a task
+    async function deleteTask() {
+      // Get the card ID from the URL
+      let cardId = new URLSearchParams(window.location.search).get("id");
+
+      // Check if the card ID is valid
+      if (!cardId || cardId === 'new') {
+        alert("Cannot delete a new or non-existent task.");
+        return;   
+      }
+
+      // Confirm the deletion
+      let confirmDelete = confirm("Are you sure you want to delete this task?");
+
+      if (!confirmDelete) {
+        return;
+      }
+
+      try{
+        // Delete the card
+        await deleteCard(cardId);
+        alert("Task deleted successfully!");
+        window.location.href = "index.html";
+      }
+      catch (error) {
+        console.error("Error deleting task:", error);
+        alert("Failed to delete task. Please try again.");
+      }
+    }
+
+    // Function to view the task history directs you to another html page
+    async function viewTaskHistory() {
+      let cardId = new URLSearchParams(window.location.search).get("id");
+
+      // Check if it is possible to view the history of the task
+      if (!cardId || cardId === 'new') {
+        alert("Cannot view history for a new or non-existent task.");
+        return;   
+      }
+
+      window.location.href = `task-history.html?id=${cardId}`;
+    }
+
+    // Function to return to the home page
+    async function returnHome() {
+      window.location.href = "index.html";
+    }
+  </script>
+
+</head>
+<body>
+    <div class="app">
+        <div class="navbar">
+            Edit Card Details
+            <button type ="button" id="home" onclick="returnHome()"> Home</button>
+            <button type ="button" id="deleteCardButton" onclick="deleteTask()" >Delete Card</button>
+            <button type ="button" id="viewTaskHistory" onclick="viewTaskHistory()"> View Task History</button>
+        </div>
+        <div class="card-details-container" id="card-details-container">
+            <form id="details-form">
+            <label for="title">Title:</label>
+            <input id="title" type="text" />
+
+            <label for="status">Status:</label>
+            <select id="status">
+                <option value="Backlog">Backlog</option>
+                <option value="In Progress">In Progress</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Completed">Completed</option>
+            </select>
+
+            <label for="duedate">Due Date:</label>
+            <input id="duedate" type="date" />
+
+            </form>
+        </div>
+    </div>
+</body>
+</html>

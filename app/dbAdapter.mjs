@@ -45,8 +45,9 @@ export async function findData(cSetName = 'data', id) {
         newObjectId = ObjectId.createFromHexString(id);
       }  
       // Exclude the id and DataHistoryLog field from the retrival
-      let options = { projection: { _id: 0 , DataHistoryLog: 0} };
-      let datum = await collection.findOne({ _id: newObjectId}, options);
+      // let options = { projection: { _id: 0 , DataHistoryLog: 0} };
+      // let datum = await collection.findOne({ _id: newObjectId}, options);
+      let datum = await collection.findOne({ _id: newObjectId});
       await _close_collection();
       return datum;
   } 
@@ -66,8 +67,9 @@ export async function findAllData(cSetName = 'data') {
   try {
       let collection = await _get_data_collection(cSetName);
       // Exclude the DataHistoryLog field from the retrival
-      let options = { projection: {DataHistoryLog: 0} };
-      let data = await collection.find({}, options).toArray();
+      // let options = { projection: {DataHistoryLog: 0} };
+      // let data = await collection.find({}, options).toArray();
+      let data = await collection.find({}).toArray();
       await _close_collection();
       return data;
   } 
@@ -84,27 +86,27 @@ export async function findAllData(cSetName = 'data') {
 * @param {string} id - The ID of the data to retrieve the history for
 * @returns {Array} - Returns an array of data history entries
 */
-export async function findDataHistory(cSetName = 'data', id) {
-  try {
-      let collection = await _get_data_collection(cSetName);
-      let newObjectId;
-      if (testing_flag) {
-        newObjectId = parseInt(id);
-      }
-      else {
-        newObjectId = ObjectId.createFromHexString(id);
-      }  
-      // Include the DataHistoryLog field only in the retrival
-      let options = { projection: { DataHistoryLog: 1, _id: 0 } };
-      let datumHistory = await collection.findOne({ _id: newObjectId }, options);
-      await _close_collection();
-      return datumHistory;
-  } 
-  catch (e) {
-      console.error('Error retrieving data history:', e);
-      return null;
-  }
-}
+// export async function findDataHistory(cSetName = 'data', id) {
+//   try {
+//       let collection = await _get_data_collection(cSetName);
+//       let newObjectId;
+//       if (testing_flag) {
+//         newObjectId = parseInt(id);
+//       }
+//       else {
+//         newObjectId = ObjectId.createFromHexString(id);
+//       }  
+//       // Include the DataHistoryLog field only in the retrival
+//       let options = { projection: { DataHistoryLog: 1, _id: 0 } };
+//       let datumHistory = await collection.findOne({ _id: newObjectId }, options);
+//       await _close_collection();
+//       return datumHistory;
+//   } 
+//   catch (e) {
+//       console.error('Error retrieving data history:', e);
+//       return null;
+//   }
+// }
 
 /**
 * Description: Retrieves all data history entries
@@ -112,20 +114,20 @@ export async function findDataHistory(cSetName = 'data', id) {
 * @param {string} cSetName - The name of the collection; the default is 'data'
 * @returns {Array} - Returns an array of data history entries
 */
-export async function findAllDataHistory(cSetName = 'data') {
-  try {
-      let collection = await _get_data_collection(cSetName);
-      // Include only the DataHistoryLog field in the retrival
-      let options = { projection: { DataHistoryLog: 1, _id: 0 } };
-      let dataHistory = await collection.find({}, options).toArray();
-      await _close_collection();
-      return dataHistory;
-  } 
-  catch (e) {
-      console.error('Error retrieving data history:', e);
-      return [];
-  }
-}
+// export async function findAllDataHistory(cSetName = 'data') {
+//   try {
+//       let collection = await _get_data_collection(cSetName);
+//       // Include only the DataHistoryLog field in the retrival
+//       let options = { projection: { DataHistoryLog: 1, _id: 0 } };
+//       let dataHistory = await collection.find({}, options).toArray();
+//       await _close_collection();
+//       return dataHistory;
+//   } 
+//   catch (e) {
+//       console.error('Error retrieving data history:', e);
+//       return [];
+//   }
+// }
 
 /**
 * Description: Deletes a datum by ID
@@ -165,4 +167,4 @@ export async function closeStore() {
 
 
 
-export default { findData, findAllData, findDataHistory, findAllDataHistory, deleteSingleData, closeStore};
+export default { findData, findAllData, deleteSingleData, closeStore};
