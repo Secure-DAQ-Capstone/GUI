@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" /> 
+  <title>Poseidon Shield</title>
+
+  <script type="module">
+    // Load data from the backend API
+    async function loadData(ids) { 
+      try {
+        if (ids) {
+          // Format ids to be used in the URL: /data?id=1&id=2&id=3
+          ids = ids.split(',').map(id => `id=${id}`).join('&');
+
+          // Fetch data from the backend API
+          let response = await fetch(`/data?${ids}`);
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.statusText}`);
+          }
+
+          // Print the response
+          console.log(response);
+
+          // Parse the JSON response
+          let dataList = await response.json();
+
+          // Dynamically create entries for each data item
+          dataList.forEach((data) => createDataEntry(data));
+        } 
+        else {
+          // Fetch all data from the backend API
+          let response = await fetch('/data');
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.statusText}`);
+          }
+
+          // Parse the JSON response
+          let dataList = await response.json();
+
+          // Dynamically create entries for each data item
+          dataList.forEach((data) => createDataEntry(data));
+        }
+      } 
+      catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data. Please try again later.');
+      }
+    }
+
+    // Function to create a new data entry element using the template
+    function createDataEntry(dataInfo) {
+      // Get the data entry template
+      let template = document.getElementById("dataEntryTemplate");
+      let entryClone = template.content.cloneNode(true);
+
+      let entryDiv = entryClone.querySelector('.listViewDataEntry');
+      entryDiv.setAttribute('id', `entry-${dataInfo._id}`);
+
+      // Create a container for the fields
+      let fieldContainer = document.createElement("div");
+      fieldContainer.classList.add("field-container");
+      
+      // Loop through dataInfo and create paragraphs for each key-value pair
+      for (let key in dataInfo) {
+        if (key === "_id") {
+          continue;
+        }
+        let p = document.createElement("p");
+        p.textContent = `${key}: ${dataInfo[key]}`;
+        fieldContainer.appendChild(p);
+      }
+
+      entryDiv.appendChild(fieldContainer);
+
+      // Append the entry to the list view container
+      let listViewContainer = document.querySelector('.listview-container');
+      listViewContainer.appendChild(entryClone);
+
+      // Add event listener to the entry
+      entryDiv.addEventListener("click", () => {
+        window.location.href = `data-details.html?id=${dataInfo._id}`;
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Get the URL parameters
+      let urlParams = new URLSearchParams(window.location.search);
+      let ids = urlParams.get('ids');
+
+      // Load data from the backend API
+      await loadData(ids);
+
+      // setInterval(() => loadData(ids), 5000);
+    });
+  </script> 
+
+  <!-- Data Entry Template -->
+  <template id="dataEntryTemplate">
+    <div class="listViewDataEntry">
+    </div>
+  </template>
+
+</head>
+<body>
+  <div class="app">
+    <div class="navbar">
+      Poseidon Shield
+    </div>
+    <div class="list">
+      <div class="listview-container">
+      </div>
+    </div>
+  </div>
+</body>
+</html>
