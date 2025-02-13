@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" />
+  <title>Event Details</title>
+  <script>
+    // Function to retrieve the existing fields
+
+    window.addEventListener("load", async () => {
+      let urlParams = new URLSearchParams(window.location.search);
+      let cardId = urlParams.get("id");
+
+        let card = await loadTask(cardId)
+
+        // If the card is found, populate the form with the card details
+        if (card) {
+          // Populate the form with the card details deafult html
+          document.getElementById("title").value = card.title;
+          document.getElementById("status").value = card.status;
+          document.getElementById("duedate").value = card.dueDate;
+
+          let form = document.getElementById("details-form");
+          for (let key of Object.keys(card)) {
+            // Skip the default fields
+            if (key !== "_id" && key !== "title" && key !== "status" && key !== "dueDate") {
+              // Create a label for the field
+              let label = document.createElement("label");
+              let capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+              label.innerText = `${capitalizedKey}:`;
+              label.setAttribute("for", key);
+              
+              // Create an input element for the field
+              let input = document.createElement("input");
+              input.id = key;
+              input.type = "text";
+              input.value = card[key];
+      
+              // Append the label and input to the form
+              form.appendChild(label);
+              form.appendChild(input);
+
+            }
+          }
+          // Create a button to save the changes and append it to the form
+          let saveButton = document.createElement("button");
+          saveButton.type = "button";
+          saveButton.innerText = "Save Changes";
+          saveButton.addEventListener("click", saveChanges);
+          form.appendChild(saveButton);
+        }
+        else {
+          alert("Card not found");
+          window.location.href = "index.html";
+        }
+
+    });
+
+
+  </script>
+
+</head>
+<body>
+    <div class="app">
+        <div class="navbar">
+            Edit Card Details
+            <button type ="button" id="home" onclick="returnHome()"> Home</button>
+        </div>
+        <div class="card-details-container" id="card-details-container">
+            <form id="details-form">
+
+            </form>
+        </div>
+    </div>
+</body>
+</html>

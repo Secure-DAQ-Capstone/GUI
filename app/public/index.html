@@ -5,6 +5,9 @@
   <title>Poseidon Shield</title>
 
   <script type="module">
+    // Global variable to store the selected cards for the list view
+    var cardsSelectedURL = "";
+
     // Load data from the backend API
     async function loadData(ids) { 
       try {
@@ -38,6 +41,8 @@
 
           // Parse the JSON response
           let dataList = await response.json();
+          // Print the response
+          console.log(dataList);
 
           // Dynamically create entries for each data item
           dataList.forEach((data) => createDataEntry(data));
@@ -78,9 +83,36 @@
       let listViewContainer = document.querySelector('.listview-container');
       listViewContainer.appendChild(entryClone);
 
-      // Add event listener to the entry
-      entryDiv.addEventListener("click", () => {
-        window.location.href = `data-details.html?id=${dataInfo._id}`;
+      // Redirect to card details page when clicking on the card
+      entryDiv.addEventListener('click', (event) => {
+        // Check if the shift key is pressed to select multiple cards 
+        console.log(cardsSelectedURL);
+        if (event.shiftKey) {
+          // Check if the card is already selected and remove it from the list
+          if (entryDiv.style.backgroundColor === "darkgrey") {
+            entryDiv.style.backgroundColor = "white";
+            // Remove the card from the selected cards list
+            cardsSelectedURL = cardsSelectedURL.replace(dataInfo._id, "");
+            cardsSelectedURL = cardsSelectedURL.replace(",,", ",");
+            cardsSelectedURL = cardsSelectedURL.replace(/(^,)|(,$)/g, "");
+            return;
+          }
+          else { //If card is selected highlight the card
+            entryDiv.style.backgroundColor = "darkgrey";
+          }
+          // Logic to add the selected cards to the list
+          if (cardsSelectedURL === "") {
+            cardsSelectedURL = dataInfo._id;
+          } 
+          else { //If not empty add the selected card id to the global variable
+            cardsSelectedURL = cardsSelectedURL + "," + dataInfo._id;
+          }
+        }
+        else{ // Redirect to the card details page if the shift key is not pressed
+            window.location.href = `data-details.html?id=${dataInfo._id}`;
+          //Clear the selected cards
+          cardsSelectedURL = "";
+        }
       });
     }
 

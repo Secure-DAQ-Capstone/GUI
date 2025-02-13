@@ -35,8 +35,43 @@ export async function getData(req, resp) {
       //If no ID is provided, retrieve all datta 
       else {
           let data = await findAllData();
+          //print the protocol of the first element in the data array //payload: { time_data_captured: [Object], data: [Object], protocol: 'NMEA' }
+          // Lets reformat the Data to unpack the objects
+          let reformattedData = [];
+          for (let i = 0; i < data.length; i++) {
+            let payload = data[i].payload;
+    
+            // Convert the timestamp to ISO format
+            let timestamp = new Date(payload.time_data_captured.seconds * 1000).toISOString();
+    
+            // Extract the label
+            let label = payload.data.label;
+    
+            // Extract and process all data entries
+            let dataEntries = payload.data.data.map(entry => {
+                // Remove the "@type" field and format key-value pairs
+                let { ['@type']: _, ...values } = entry;
+                return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
+            });
+    
+            // Join multiple entries into a single string
+            let dataValue = dataEntries.join(" | ");
+    
+            // Construct the new format
+            let newEntry = {
+                _id: data[i]._id,
+                timestamp: timestamp,
+                label: label,
+                protocol: payload.protocol,
+                dataValue: dataValue
+            };
+    
+            reformattedData.push(newEntry);
+          }
+          console.log(reformattedData[0]);
+
           //If data are retrieved successfully, return 200 response code
-          return resp.status(200).send(data);
+          return resp.status(200).send(reformattedData);
       }
     } 
     catch (e) {
@@ -44,8 +79,6 @@ export async function getData(req, resp) {
       resp.status(500).send('Server Error');
     }
   }
-
-
 
 //API Handler for delete '/data' to delete a data if an ID is provided.
 export async function deleteData(req, resp) {

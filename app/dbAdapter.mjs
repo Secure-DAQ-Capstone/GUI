@@ -69,8 +69,17 @@ export async function findAllData(cSetName = 'data') {
       // Exclude the DataHistoryLog field from the retrival
       // let options = { projection: {DataHistoryLog: 0} };
       // let data = await collection.find({}, options).toArray();
-      let data = await collection.find({}).toArray();
+      //Exclude certain fields from the retrieval
+      let options = {
+        projection: {
+          "payload.time_data_captured": 1,
+          "payload.data": 1,
+          "payload.protocol": 1
+        }
+      };
+      let data = await collection.find({}, options).toArray();
       await _close_collection();
+
       return data;
   } 
   catch (e) {

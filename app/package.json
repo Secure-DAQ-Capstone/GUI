@@ -1,9 +1,11 @@
 {
-  "scripts":{
+  "scripts": {
     "start": "node serve.mjs"
   },
   "dependencies": {
     "express": "^4.21.1",
-    "mongodb": "^6.10.0"
+    "mongodb": "^6.10.0",
+    "mongoose": "^8.10.0",
+    "ws": "^8.18.0"
   }
 }
