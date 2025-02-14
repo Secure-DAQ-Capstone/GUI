@@ -72,13 +72,15 @@ export async function findAllData(cSetName = 'data') {
       //Exclude certain fields from the retrieval
       let options = {
         projection: {
-          "payload.time_data_captured": 1,
+          "payload.timeDataCaptured": 1,
           "payload.data": 1,
           "payload.protocol": 1
         }
       };
       let data = await collection.find({}, options).toArray();
       await _close_collection();
+
+      // console.log(data)
 
       return data;
   } 

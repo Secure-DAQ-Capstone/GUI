@@ -39,16 +39,17 @@ export async function getData(req, resp) {
           // Lets reformat the Data to unpack the objects
           let reformattedData = [];
           for (let i = 0; i < data.length; i++) {
-            let payload = data[i].payload;
-    
-            // Convert the timestamp to ISO format
-            let timestamp = new Date(payload.time_data_captured.seconds * 1000).toISOString();
-    
+
+            // Get Time Data Captured
+            let timeDataCaptured = data[i].payload.timeDataCaptured
+
+            let payload = data[i].payload.data;
+
             // Extract the label
-            let label = payload.data.label;
+            let label = payload.label;         
     
             // Extract and process all data entries
-            let dataEntries = payload.data.data.map(entry => {
+            let dataEntries = payload.data.map(entry => {
                 // Remove the "@type" field and format key-value pairs
                 let { ['@type']: _, ...values } = entry;
                 return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
@@ -60,15 +61,12 @@ export async function getData(req, resp) {
             // Construct the new format
             let newEntry = {
                 _id: data[i]._id,
-                timestamp: timestamp,
+                timeDataCaptured: timeDataCaptured,
                 label: label,
-                protocol: payload.protocol,
                 dataValue: dataValue
             };
-    
             reformattedData.push(newEntry);
           }
-          console.log(reformattedData[0]);
 
           //If data are retrieved successfully, return 200 response code
           return resp.status(200).send(reformattedData);
