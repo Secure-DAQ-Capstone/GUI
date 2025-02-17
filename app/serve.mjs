@@ -1,4 +1,4 @@
-import {getData, getLatestData, deleteData} from "./endpoints.mjs"
+import {getData, getLatestData, getLabelSpecificData, deleteData} from "./endpoints.mjs"
 import express from 'express';
 import path from 'path'
 
@@ -40,5 +40,12 @@ API Call to get the lastest data entry for each unqique label.
 */
 app.get('/latestData', getLatestData);
 
+/*
+API Call to get all data entries of a specific label.
+Required query parameters: label
+Sample request for one label: /data?label=History
+*/
+
+app.get('/labelSpecificData', getLabelSpecificData);
 
 export default server 

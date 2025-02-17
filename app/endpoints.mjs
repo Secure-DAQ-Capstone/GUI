@@ -133,6 +133,35 @@ export async function deleteData(req, resp) {
     }
 }
 
+export async function getLabelSpecificData(req, resp) {
+    try {
+      //Retrieve the label from the request query
+      let label = req.query.label;
+  
+      //Check if the required field was passed in the request body
+      if (!label) {
+        return resp.status(400).send('Label is required.');
+      }
+      
+      //TODO create a dbAdapter function to retrieve data by label
+      //Retrieve all data
+      let data = await findAllData();
+  
+      //Filter the data to get all data entries with the specified label
+      let labelSpecificData = data.filter(dataEntry => dataEntry.payload.data.label === label);
+
+      //Lets reformat the Data to unpack the objects
+      let reformattedData = reformatData(labelSpecificData);
+  
+      //If data are retrieved successfully, return 200 response code
+      return resp.status(200).send(reformattedData);
+    } 
+    catch (e) {
+      //If there is an error, return 500 response code
+      resp.status(500).send('Server Error');
+    }
+}
+
 //Helper function to reformate the data
 function reformatData(data) {
     let reformattedData = [];

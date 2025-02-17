@@ -23,20 +23,26 @@ html, body {
 }
 
 .navbar {
-  padding: 1rem;
+  display: flex;
+  justify-content: space-between; /* Pushes title left and button right */
+  align-items: center; /* Centers content vertically */
+  padding: 1rem 2rem;
   background-color: #004c8c;
   color: #ffffff;
-  font-size: 1.2rem;
+  font-size: 2rem;
   font-weight: bold;
-  text-align: center;
   flex-shrink: 0;
 }
+
+
+#home, #dataEntries {
+  margin-left: 10px; /* Pushes the button to the right */
+} 
 
 .list {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
 }
 
 .listview-container {
@@ -45,6 +51,7 @@ html, body {
   width: 90%;
   max-width: 800px;
   gap: 10px;
+  padding: 20px;
 }
 
 .listViewDataEntry {
@@ -81,7 +88,7 @@ html, body {
 button {
   background-color: #0073e6;
   color: white;
-  padding: 0.7rem;
+  padding: 0.5rem;
   font-size: 1rem;
   border: none;
   border-radius: 4px;
