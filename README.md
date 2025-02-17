@@ -30,6 +30,8 @@ brew services start mongodb-community@8.0
 2. Import the information from the JSON file
 ```
 mongoimport --db=dataMarineSystem --collection=data --file=data_mock.json --jsonArray 
-
+```
 3. Stop MongoDB
+```
 brew services stop mongodb-community@8.0
+```
