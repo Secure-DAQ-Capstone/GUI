@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" /> 
+  <title>Poseidon Shield</title>
+
+  <script type="module">
+    // Global variable to store the selected cards for the list view
+    var cardsSelectedURL = "";
+
+    // Load data from the backend API
+    async function loadData(labelname) { 
+      try {
+        let response = await fetch(`/labelSpecificData?label=${labelname}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.statusText}`);
+        }
+
+        let dataList = await response.json();
+
+        // Loop through and create entries, marking the first entry
+        dataList.forEach((data, index) => createDataEntry(data, index === 0));
+      } 
+      catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data. Please try again later.');
+      }
+    }
+    function createDataEntry(dataInfo, isFirstEntry) {
+      let listViewContainer = document.querySelector('.listview-container');
+
+      // If it's the first entry, create and append the header
+      if (isFirstEntry) {
+        let header = document.createElement("h2");
+        header.textContent = dataInfo.label.charAt(0).toUpperCase() + dataInfo.label.slice(1);
+        header.textContent+= ` Sensor Data`;
+        header.classList.add("card-header");
+        listViewContainer.appendChild(header);
+      }
+
+      // Get the data entry template
+      let template = document.getElementById("dataEntryTemplate");
+      let entryClone = template.content.cloneNode(true);
+      let entryDiv = entryClone.querySelector('.listViewDataEntry');
+      entryDiv.setAttribute('id', `entry-${dataInfo._id}`);
+
+      // Create a container for the fields
+      let fieldContainer = document.createElement("div");
+      fieldContainer.classList.add("field-container");
+
+      // Loop through dataInfo and create paragraphs for each key-value pair
+      for (let key in dataInfo) {
+        if (key === "_id" || key === "label") {
+          continue;
+        }
+        let p = document.createElement("p");
+        p.textContent = `${key}: ${dataInfo[key]}`;
+        fieldContainer.appendChild(p);
+      }
+
+      entryDiv.appendChild(fieldContainer);
+      listViewContainer.appendChild(entryClone);
+
+      // Redirect to card details page when clicking on the card
+      entryDiv.addEventListener('click', (event) => {
+        // Check if the shift key is pressed to select multiple cards 
+        if (event.shiftKey) {
+          // Check if the card is already selected and remove it from the list
+          if (entryDiv.style.backgroundColor === "darkgrey") {
+            entryDiv.style.backgroundColor = "#FFFFFF";
+            // Remove the card from the selected cards list
+            cardsSelectedURL = cardsSelectedURL.replace(dataInfo._id, "");
+            cardsSelectedURL = cardsSelectedURL.replace(",,", ",");
+            cardsSelectedURL = cardsSelectedURL.replace(/(^,)|(,$)/g, "");
+            return;
+          }
+          else { //If card is selected highlight the card
+            entryDiv.style.backgroundColor = "darkgrey";
+          }
+          // Logic to add the selected cards to the list
+          if (cardsSelectedURL === "") {
+            cardsSelectedURL = dataInfo._id;
+          } 
+          else { //If not empty add the selected card id to the global variable
+            cardsSelectedURL = cardsSelectedURL + "," + dataInfo._id;
+          }
+        }
+        else{ // Redirect to the card details page if the shift key is not pressed
+            window.location.href = `data-details.html?id=${dataInfo._id}`;
+          //Clear the selected cards
+          cardsSelectedURL = "";
+        }
+      });
+    }
+
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Get the URL parameters
+      let urlParams = new URLSearchParams(window.location.search);
+      let label = urlParams.get('label');
+
+      // Load data from the backend API
+      await loadData(label);
+
+    });
+
+    // Return to the home page
+    function returnHome() {
+      window.location.href = "index.html";
+    }
+
+    window.returnHome = returnHome;
+
+    // List View Field button functionality
+    let listViewButton = document.getElementById("dataEntries");
+    listViewButton.addEventListener("click", () => {
+      // Redirect to the list view page with the selected cards
+      if (cardsSelectedURL !== "") { // If there are selected cards send the ids to the list view page
+        window.location.href = `data-details.html?ids=${cardsSelectedURL}`;
+      }
+      else { // If there are no selected cards
+        window.location.href = `data-details.html`;
+      }
+    });
+  </script> 
+
+  <!-- Data Entry Template -->
+  <template id="dataEntryTemplate">
+    <div class="listViewDataEntry">
+    </div>
+  </template>
+
+</head>
+<body>
+  <div class="app">
+    <div class="navbar">
+      Poseidon Shield
+      <button type="button" id="home" onclick="returnHome()">Home</button>
+      <button type ="button" id="dataEntries"> Entries Info</button>
+    </div>
+    <div class="list">
+      <div class="listview-container">
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
