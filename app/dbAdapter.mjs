@@ -80,8 +80,6 @@ export async function findAllData(cSetName = 'data') {
       let data = await collection.find({}, options).toArray();
       await _close_collection();
 
-      // console.log(data)
-
       return data;
   } 
   catch (e) {

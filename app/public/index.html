@@ -5,48 +5,21 @@
   <title>Poseidon Shield</title>
 
   <script type="module">
-    // Global variable to store the selected cards for the list view
-    var cardsSelectedURL = "";
-
     // Load data from the backend API
     async function loadData(ids) { 
       try {
-        if (ids) {
-          // Format ids to be used in the URL: /data?id=1&id=2&id=3
-          ids = ids.split(',').map(id => `id=${id}`).join('&');
+        //Get latest data from the backend API
+        let response = await fetch('/latestData');
 
-          // Fetch data from the backend API
-          let response = await fetch(`/data?${ids}`);
-
-          if (!response.ok) {
+        if (!response.ok) {
             throw new Error(`Failed to fetch data: ${response.statusText}`);
           }
-
-          // Print the response
-          console.log(response);
 
           // Parse the JSON response
           let dataList = await response.json();
 
           // Dynamically create entries for each data item
           dataList.forEach((data) => createDataEntry(data));
-        } 
-        else {
-          // Fetch all data from the backend API
-          let response = await fetch('/data');
-
-          if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.statusText}`);
-          }
-
-          // Parse the JSON response
-          let dataList = await response.json();
-          // Print the response
-          console.log(dataList);
-
-          // Dynamically create entries for each data item
-          dataList.forEach((data) => createDataEntry(data));
-        }
       } 
       catch (error) {
         console.error('Error loading data:', error);
@@ -61,7 +34,16 @@
       let entryClone = template.content.cloneNode(true);
 
       let entryDiv = entryClone.querySelector('.listViewDataEntry');
-      entryDiv.setAttribute('id', `entry-${dataInfo._id}`);
+      entryDiv.setAttribute('id', `entry-${dataInfo.label}`);
+
+      // Create a heading for the card which is the label
+
+      let heading = document.createElement("h3");
+      //Make the first letter of dataInfo.label uppercase
+      dataInfo.label = dataInfo.label.charAt(0).toUpperCase() + dataInfo.label.slice(1);
+      heading.textContent = dataInfo.label;
+      entryDiv.appendChild(heading);
+
 
       // Create a container for the fields
       let fieldContainer = document.createElement("div");
@@ -69,7 +51,7 @@
       
       // Loop through dataInfo and create paragraphs for each key-value pair
       for (let key in dataInfo) {
-        if (key === "_id") {
+        if (key === "_id" || key ==="label") {
           continue;
         }
         let p = document.createElement("p");
@@ -85,34 +67,8 @@
 
       // Redirect to card details page when clicking on the card
       entryDiv.addEventListener('click', (event) => {
-        // Check if the shift key is pressed to select multiple cards 
-        console.log(cardsSelectedURL);
-        if (event.shiftKey) {
-          // Check if the card is already selected and remove it from the list
-          if (entryDiv.style.backgroundColor === "darkgrey") {
-            entryDiv.style.backgroundColor = "white";
-            // Remove the card from the selected cards list
-            cardsSelectedURL = cardsSelectedURL.replace(dataInfo._id, "");
-            cardsSelectedURL = cardsSelectedURL.replace(",,", ",");
-            cardsSelectedURL = cardsSelectedURL.replace(/(^,)|(,$)/g, "");
-            return;
-          }
-          else { //If card is selected highlight the card
-            entryDiv.style.backgroundColor = "darkgrey";
-          }
-          // Logic to add the selected cards to the list
-          if (cardsSelectedURL === "") {
-            cardsSelectedURL = dataInfo._id;
-          } 
-          else { //If not empty add the selected card id to the global variable
-            cardsSelectedURL = cardsSelectedURL + "," + dataInfo._id;
-          }
-        }
-        else{ // Redirect to the card details page if the shift key is not pressed
-            window.location.href = `data-details.html?id=${dataInfo._id}`;
-          //Clear the selected cards
-          cardsSelectedURL = "";
-        }
+        // Redirect to the card details page if the shift key is not pressed
+        window.location.href = `list-data.html?id=${dataInfo.label}`;     
       });
     }
 
@@ -124,7 +80,6 @@
       // Load data from the backend API
       await loadData(ids);
 
-      // setInterval(() => loadData(ids), 5000);
     });
   </script> 
 

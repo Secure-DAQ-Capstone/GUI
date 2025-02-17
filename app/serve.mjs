@@ -1,4 +1,4 @@
-import {getData, deleteData} from "./endpoints.mjs"
+import {getData, getLatestData, deleteData} from "./endpoints.mjs"
 import express from 'express';
 import path from 'path'
 
@@ -34,6 +34,11 @@ Sample request for one task: /tasks?id=1
 Sample request for multiple tasks: /tasks?id=1&id=2&id=3
 */
 app.delete('/data', deleteData);
+
+/*
+API Call to get the lastest data entry for each unqique label.
+*/
+app.get('/latestData', getLatestData);
 
 
 export default server 

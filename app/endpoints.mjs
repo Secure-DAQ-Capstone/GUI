@@ -35,42 +35,59 @@ export async function getData(req, resp) {
       //If no ID is provided, retrieve all datta 
       else {
           let data = await findAllData();
+          
           //print the protocol of the first element in the data array //payload: { time_data_captured: [Object], data: [Object], protocol: 'NMEA' }
           // Lets reformat the Data to unpack the objects
-          let reformattedData = [];
-          for (let i = 0; i < data.length; i++) {
 
-            // Get Time Data Captured
-            let timeDataCaptured = data[i].payload.timeDataCaptured
-
-            let payload = data[i].payload.data;
-
-            // Extract the label
-            let label = payload.label;         
-    
-            // Extract and process all data entries
-            let dataEntries = payload.data.map(entry => {
-                // Remove the "@type" field and format key-value pairs
-                let { ['@type']: _, ...values } = entry;
-                return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
-            });
-    
-            // Join multiple entries into a single string
-            let dataValue = dataEntries.join(" | ");
-    
-            // Construct the new format
-            let newEntry = {
-                _id: data[i]._id,
-                timeDataCaptured: timeDataCaptured,
-                label: label,
-                dataValue: dataValue
-            };
-            reformattedData.push(newEntry);
-          }
+          let reformattedData = reformatData(data);
 
           //If data are retrieved successfully, return 200 response code
           return resp.status(200).send(reformattedData);
       }
+    } 
+    catch (e) {
+      //If there is an error, return 500 response code
+      resp.status(500).send('Server Error');
+    }
+}
+
+//API Handler for get '/latestData' to retrieve the latest data entry for each unique label
+export async function getLatestData(req, resp) {
+    try {
+      //Retrieve all data
+      let data = await findAllData();
+  
+      //Create a map to store the latest data entry for each unique label
+      let latestData = new Map();
+  
+      //Iterate over all data entries
+      for (let dataEntry of data) {
+        let label = dataEntry.payload.data.label;
+  
+        //If the label is not in the map, add it
+        if (!latestData.has(label)) {
+          latestData.set(label, dataEntry);
+        }
+        else {
+          //If the label is in the map, compare the time data captured
+          let existingData = latestData.get(label);
+          let newData = dataEntry;
+  
+          //If the new data has a later time data captured, replace the existing data
+          if (newData.payload.timeDataCaptured > existingData.payload.timeDataCaptured) {
+            latestData.set(label, newData);
+          }
+        }
+      }
+  
+      //Convert the map to an array and return the latest data entry for each unique label
+      let latestDataArray = Array.from(latestData.values());
+
+      //Lets reformat the Data to unpack the objects
+      let reformattedData = reformatData(latestDataArray);
+  
+      //If data are retrieved successfully, return 200 response code
+      return resp.status(200).send(reformattedData);
     } 
     catch (e) {
       //If there is an error, return 500 response code
@@ -114,4 +131,39 @@ export async function deleteData(req, resp) {
       //If there is an error, return 500 response code
       resp.status(500).send('Server Error');
     }
+}
+
+//Helper function to reformate the data
+function reformatData(data) {
+    let reformattedData = [];
+    for (let i = 0; i < data.length; i++) {
+  
+      // Get Time Data Captured
+      let timeDataCaptured = data[i].payload.timeDataCaptured
+  
+      let payload = data[i].payload.data;
+  
+      // Extract the label
+      let label = payload.label;         
+  
+      // Extract and process all data entries
+      let dataEntries = payload.data.map(entry => {
+          // Remove the "@type" field and format key-value pairs
+          let { ['@type']: _, ...values } = entry;
+          return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
+      });
+  
+      // Join multiple entries into a single string
+      let dataValue = dataEntries.join(" | ");
+  
+      // Construct the new format
+      let newEntry = {
+          _id: data[i]._id,
+          timeDataCaptured: timeDataCaptured,
+          label: label,
+          dataValue: dataValue
+      };
+      reformattedData.push(newEntry);
+    }
+    return reformattedData;
   }
