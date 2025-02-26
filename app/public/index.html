@@ -39,7 +39,7 @@
       // Create a heading for the card which is the label
       let heading = document.createElement("h3");
       //Make the first letter of dataInfo.label uppercase
-      heading.textContent = dataInfo.label.charAt(0).toUpperCase() + dataInfo.label.slice(1);
+      heading.textContent = dataInfo.label.charAt(0).toUpperCase() + dataInfo.label.slice(1) + " Latest Data";
       entryDiv.appendChild(heading);
 
 
@@ -66,7 +66,7 @@
       // Redirect to card details page when clicking on the card
       entryDiv.addEventListener('click', (event) => {
         // Redirect to the card details page if the shift key is not pressed
-        window.location.href = `list-data.html?label=${dataInfo.label}`;     
+        window.location.href = `plot.html?label=${dataInfo.label}`;     
       });
     }
 
