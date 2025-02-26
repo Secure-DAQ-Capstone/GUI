@@ -124,48 +124,28 @@ export async function getLabelSpecificData(req, resp) {
 
 export async function getLabelSpecificDataForPlottingByTimeForTheLastHour(req, resp) {
   try {
-      // Retrieve the label from the request query
-      let label = req.query.label;
+    //Retrieve the label from the request query
+    let label = req.query.label;
 
-      // Check if the required field was passed in the request body
-      if (!label) {
-          return resp.status(400).send('Label is required.');
-      }
+    //Check if the required field was passed in the request body
+    if (!label) {
+      return resp.status(400).send('Label is required.');
+    }
+    // Retrieve all data using the label
+    let data = await findDataByLabel('data', label);  
 
-      // Retrieve all data
-      let data = await findDataByLabel('data', label);  
+    // Reformat the data to unpack the objects
+    let reformattedData = reformatDataPlot(data, label);
 
-      // Reformat the data to unpack the objects
-      let reformattedData = reformatDataPlot(data, label);
+    //Filter the data to get all data entries with the specified label
+    let labelSpecificDataForPlotting = reformattedData.filter(dataEntry => dataEntry.timeDataCaptured > Date.now() - 3600000);
 
-      // Define the reference time for comparison
-      let referenceTime = Date.parse("2025-02-14T02:01:26Z");
-
-      // Calculate the cutoff time (one hour before the reference time)
-      let cutoffTime = referenceTime - 3600000;
-
-      // Filter the data to get all data entries within the last hour based on the reference time
-      let labelSpecificDataForPlotting = reformattedData.filter(
-          dataEntry => Date.parse(dataEntry.timeDataCaptured) > cutoffTime
-      );
-
-      // Extract the data values for smoothing
-      let values = labelSpecificDataForPlotting.map(item => item.dataValue);
-
-      // Apply moving average for smoothing
-      let smoothedValues = smoothData(values, 2); // You can adjust the window size (e.g., 2)
-
-      // Replace the data values with the smoothed ones
-      labelSpecificDataForPlotting = labelSpecificDataForPlotting.map((item, index) => {
-        return { ...item, dataValue: smoothedValues[index] };
-      });
-
-      // If data are retrieved successfully, return 200 response code with the smoothed data
-      return resp.status(200).send(labelSpecificDataForPlotting);
+    //If data are retrieved successfully, return 200 response code
+    return resp.status(200).send(labelSpecificDataForPlotting);
   } 
   catch (e) {
-      // If there is an error, return 500 response code
-      resp.status(500).send('Server Error');
+    //If there is an error, return 500 response code
+    resp.status(500).send('Server Error');
   }
 }
 
