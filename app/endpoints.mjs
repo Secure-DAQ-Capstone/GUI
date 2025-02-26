@@ -56,6 +56,7 @@ export async function getData(req, resp) {
 //API Handler for get '/latestData' to retrieve the latest data entry for each unique label
 export async function getLatestData(req, resp) {
     try {
+      //TODO: Create a function to retrieve the latest data entry for each unique label
       //Retrieve all data
       let data = await findAllData();
   
@@ -133,7 +134,9 @@ export async function getLabelSpecificDataForPlottingByTimeForTheLastHour(req, r
       }
 
       // Retrieve all data
-      let data = await findDataByLabel('data', label);  
+      let data = await findDataByLabel('data', label);
+      
+      //TODO: Add a dbfunction to retrieve data for a specific label for the last hour
 
       // Reformat the data to unpack the objects
       let reformattedData = reformatDataPlot(data, label);
