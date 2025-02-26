@@ -19,11 +19,11 @@ server.listen(port, function (err) {
 });
 
 /*
-API Call to get tasks.
+API Call to get data entrires.
 Optional query parameters: id
-Sample request for one task: /tasks?id=1
-Sample request for multiple tasks: /tasks?id=1&id=2&id=3
-Sample request for all tasks: /tasks (if no id passed all tasks are retrieved)
+Sample request for one task: /data?id=1
+Sample request for multiple datum: /data?id=1&id=2&id=3
+Sample request for all data: /data (if no id passed all data are retrieved)
 */
 app.get('/data', getData);
 
