@@ -63,33 +63,9 @@
 
       // Redirect to card details page when clicking on the card
       entryDiv.addEventListener('click', (event) => {
-        // Check if the shift key is pressed to select multiple cards 
-        if (event.shiftKey) {
-          // Check if the card is already selected and remove it from the list
-          if (entryDiv.style.backgroundColor === "darkgrey") {
-            entryDiv.style.backgroundColor = "#FFFFFF";
-            // Remove the card from the selected cards list
-            cardsSelectedURL = cardsSelectedURL.replace(dataInfo._id, "");
-            cardsSelectedURL = cardsSelectedURL.replace(",,", ",");
-            cardsSelectedURL = cardsSelectedURL.replace(/(^,)|(,$)/g, "");
-            return;
-          }
-          else { //If card is selected highlight the card
-            entryDiv.style.backgroundColor = "darkgrey";
-          }
-          // Logic to add the selected cards to the list
-          if (cardsSelectedURL === "") {
-            cardsSelectedURL = dataInfo._id;
-          } 
-          else { //If not empty add the selected card id to the global variable
-            cardsSelectedURL = cardsSelectedURL + "," + dataInfo._id;
-          }
-        }
-        else{ // Redirect to the card details page if the shift key is not pressed
             window.location.href = `data-details.html?id=${dataInfo._id}`;
-          //Clear the selected cards
+          //Clear the selected card
           cardsSelectedURL = "";
-        }
       });
     }
 
@@ -111,17 +87,6 @@
 
     window.returnHome = returnHome;
 
-    // List View Field button functionality
-    let listViewButton = document.getElementById("dataEntries");
-    listViewButton.addEventListener("click", () => {
-      // Redirect to the list view page with the selected cards
-      if (cardsSelectedURL !== "") { // If there are selected cards send the ids to the list view page
-        window.location.href = `data-details.html?ids=${cardsSelectedURL}`;
-      }
-      else { // If there are no selected cards
-        window.location.href = `data-details.html`;
-      }
-    });
   </script> 
 
   <!-- Data Entry Template -->
@@ -136,7 +101,6 @@
     <div class="navbar">
       Poseidon Shield
       <button type="button" id="home" onclick="returnHome()">Home</button>
-      <button type ="button" id="dataEntries"> Entries Info</button>
     </div>
     <div class="list">
       <div class="listview-container">

@@ -1,4 +1,4 @@
-import { findData, findAllData, deleteSingleData} from './dbAdapter.mjs';
+import { findData, findAllData, findDataByLabel} from './dbAdapter.mjs';
 
 // API Handler for get '/data' to retrieve specific data if IDs are provided or all data if no ID is provided
 export async function getData(req, resp) {
@@ -22,10 +22,12 @@ export async function getData(req, resp) {
             dataRetrieved.push(data);
           }
         }
+
+        let reformattedData = reformatDataForEntryDisplay(dataRetrieved);
   
         if (dataRetrieved.length > 0) {
           //If data is retrieved successfully, return 200 response code 
-          return resp.status(200).send(dataRetrieved);
+          return resp.status(200).send(reformattedData);
         }
         else {
           //If data is not retrieved successfully, return 404 response code 
@@ -93,44 +95,6 @@ export async function getLatestData(req, resp) {
       //If there is an error, return 500 response code
       resp.status(500).send('Server Error');
     }
-  }
-
-//API Handler for delete '/data' to delete a data if an ID is provided.
-export async function deleteData(req, resp) {
-    try {
-        let dataIds = req.query.id;
-  
-        //Determine if the required field was passed in the request body
-        if (!dataIds) {
-          return resp.status(400).send('At least ONE id is required.');
-        }
-  
-        //Check if the provided parameter is an array or single value
-        if (dataIds) {
-            if (!Array.isArray(dataIds)) {
-                dataIds = [dataIds];
-            }
-  
-            let deleteResult;
-  
-            for (let dataId of dataIds) {
-              deleteResult = await deleteSingleData('data', dataId);
-            }
-  
-            if (deleteResult.deletedCount > 0) {
-              //If data is deleted successfully, return 200 response code
-              return resp.status(200).send(`Data Deleted`);
-            } 
-            else {
-              //If data is not deleted successfully, return 404 response code
-              return resp.status(404).send('No data found for the provided IDs');
-            }
-        }
-    } 
-    catch (e) {
-      //If there is an error, return 500 response code
-      resp.status(500).send('Server Error');
-    }
 }
 
 export async function getLabelSpecificData(req, resp) {
@@ -143,15 +107,11 @@ export async function getLabelSpecificData(req, resp) {
         return resp.status(400).send('Label is required.');
       }
       
-      //TODO create a dbAdapter function to retrieve data by label
-      //Retrieve all data
-      let data = await findAllData();
-  
-      //Filter the data to get all data entries with the specified label
-      let labelSpecificData = data.filter(dataEntry => dataEntry.payload.data.label === label);
+      //Get all data for the specific label
+      let data = await findDataByLabel('data', label);
 
       //Lets reformat the Data to unpack the objects
-      let reformattedData = reformatData(labelSpecificData);
+      let reformattedData = reformatData(data);
   
       //If data are retrieved successfully, return 200 response code
       return resp.status(200).send(reformattedData);
@@ -162,37 +122,156 @@ export async function getLabelSpecificData(req, resp) {
     }
 }
 
-//Helper function to reformate the data
-function reformatData(data) {
-    let reformattedData = [];
-    for (let i = 0; i < data.length; i++) {
-  
-      // Get Time Data Captured
-      let timeDataCaptured = data[i].payload.timeDataCaptured
-  
-      let payload = data[i].payload.data;
-  
-      // Extract the label
-      let label = payload.label;         
-  
-      // Extract and process all data entries
-      let dataEntries = payload.data.map(entry => {
-          // Remove the "@type" field and format key-value pairs
-          let { ['@type']: _, ...values } = entry;
-          return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
+export async function getLabelSpecificDataForPlottingByTimeForTheLastHour(req, resp) {
+  try {
+      // Retrieve the label from the request query
+      let label = req.query.label;
+
+      // Check if the required field was passed in the request body
+      if (!label) {
+          return resp.status(400).send('Label is required.');
+      }
+
+      // Retrieve all data
+      let data = await findDataByLabel('data', label);  
+
+      // Reformat the data to unpack the objects
+      let reformattedData = reformatDataPlot(data, label);
+
+      // Define the reference time for comparison
+      let referenceTime = Date.parse("2025-02-14T02:01:26Z");
+
+      // Calculate the cutoff time (one hour before the reference time)
+      let cutoffTime = referenceTime - 3600000;
+
+      // Filter the data to get all data entries within the last hour based on the reference time
+      let labelSpecificDataForPlotting = reformattedData.filter(
+          dataEntry => Date.parse(dataEntry.timeDataCaptured) > cutoffTime
+      );
+
+      // Extract the data values for smoothing
+      let values = labelSpecificDataForPlotting.map(item => item.dataValue);
+
+      // Apply moving average for smoothing
+      let smoothedValues = smoothData(values, 2); // You can adjust the window size (e.g., 2)
+
+      // Replace the data values with the smoothed ones
+      labelSpecificDataForPlotting = labelSpecificDataForPlotting.map((item, index) => {
+        return { ...item, dataValue: smoothedValues[index] };
       });
-  
-      // Join multiple entries into a single string
-      let dataValue = dataEntries.join(" | ");
-  
-      // Construct the new format
-      let newEntry = {
-          _id: data[i]._id,
-          timeDataCaptured: timeDataCaptured,
-          label: label,
-          dataValue: dataValue
-      };
-      reformattedData.push(newEntry);
-    }
-    return reformattedData;
+
+      // If data are retrieved successfully, return 200 response code with the smoothed data
+      return resp.status(200).send(labelSpecificDataForPlotting);
+  } 
+  catch (e) {
+      // If there is an error, return 500 response code
+      resp.status(500).send('Server Error');
   }
+}
+
+//Helper function to reformat the data
+function reformatData(data) {
+  let reformattedData = [];
+  for (let i = 0; i < data.length; i++) {
+
+    // Get Time Data Captured
+    let timeDataCaptured = data[i].payload.timeDataCaptured
+
+    let payload = data[i].payload.data;
+
+    // Extract the label
+    let label = payload.label;         
+
+    // Extract and process all data entries
+    let dataEntries = payload.data.map(entry => {
+        // Remove the "@type" field and format key-value pairs
+        let { ['@type']: _, ...values } = entry;
+        return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
+    });
+
+    // Join multiple entries into a single string
+    let dataValue = dataEntries.join(" | ");
+
+    // Construct the new format
+    let newEntry = {
+        _id: data[i]._id,
+        timeDataCaptured: timeDataCaptured,
+        label: label,
+        dataValue: dataValue
+    };
+    reformattedData.push(newEntry);
+  }
+  return reformattedData;
+}
+
+
+//Helper function to reformat the data for plotting
+function reformatDataPlot(data, label) {
+  let reformattedData = [];
+  for (let i = 0; i < data.length; i++) {
+
+    // Get Time Data Captured
+    let timeDataCaptured = data[i].payload.timeDataCaptured
+
+    let dataValue = data[i].payload.data.data[0][label];
+
+    // Construct the new format
+    let newEntry = {
+        _id: data[i]._id,
+        timeDataCaptured: timeDataCaptured,
+        dataValue: dataValue
+    };
+    reformattedData.push(newEntry);
+  }
+  return reformattedData;
+}
+
+function reformatDataForEntryDisplay(data) {
+  let reformattedData = [];
+  for (let i = 0; i < data.length; i++) {
+    //Get Relvant fields from the Metadata
+    let boardIdMsgOrigin = data[i].metadata.boardIdMsgOrigin;
+
+    //Get Relay Chain Entry Array
+    let relayChain = data[i].metadata.relayChain;
+
+    //Get the Digital Signature
+    let digitalSignature = data[i].metadata.digitalSignature;
+
+    // Get Relevant fields from the Payload
+    let timeDataCaptured = data[i].payload.timeDataCaptured
+
+    let payload = data[i].payload.data;
+    let label = payload.label;
+    let dataEntries = payload.data.map(entry => {
+      let { ['@type']: _, ...values } = entry;
+      return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
+    });
+    let dataValue = dataEntries.join(" | ");
+
+    // Construct the new format
+    let newEntry = {
+      _id: data[i]._id,
+      boardIdMsgOrigin: boardIdMsgOrigin,
+      relayChain: relayChain,
+      digitalSignature: digitalSignature,
+      timeDataCaptured: timeDataCaptured,
+      label: label,
+      dataValue: dataValue
+    };
+    reformattedData.push(newEntry);
+  }
+  return reformattedData;
+}
+
+// Simple moving average function
+function smoothData(values, windowSize) {
+  const smoothed = [];
+  for (let i = 0; i < values.length; i++) {
+    const start = Math.max(0, i - windowSize);
+    const end = i + windowSize;
+    const avg = values.slice(start, end).reduce((acc, val) => acc + val, 0) / (end - start);
+    smoothed.push(avg);
+  }
+  return smoothed;
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" /> 
+  <title>Poseidon Shield</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script type="module">
+    async function loadData(labelname) { 
+      try {
+        let response = await fetch(`/plotData?label=${labelname}`);
+        if (!response.ok) throw new Error(`Failed to fetch data: ${response.statusText}`);
+  
+        let dataList = await response.json();
+        let label = labelname.charAt(0).toUpperCase() + labelname.slice(1);
+        
+        // Extract data for chart
+        let labels = dataList.map(item => new Date(item.timeDataCaptured).toLocaleTimeString());
+        let values = dataList.map(item => item.dataValue);
+        let ids = dataList.map(item => item._id); // Get IDs for click handling
+  
+        // Create Chart
+        let ctx = document.getElementById('dataChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Data Value Over Time',
+              data: values,
+              borderColor: 'blue',
+              borderWidth: 2,
+              fill: false,
+              cubicInterpolationMode: 'monotone',
+              dataIds: ids // Store IDs with dataset
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Last Hour Data' // Chart title
+              }
+            },
+            onClick: (event, elements, chart) => {
+              if (elements.length > 0) {
+                const index = elements[0].index;
+                const dataset = chart.data.datasets[0];
+                const id = dataset.dataIds[index];
+                window.location.href = `/data-details.html?id=${id}`; // Redirect to data entry
+              }
+            },
+            scales: {
+              x: { title: { display: true, text: 'Time' } },
+              y: { 
+                title: { 
+                  display: true, 
+                  text: label
+                }
+              }
+            }
+          }
+        });
+  
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data. Please try again later.');
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      let urlParams = new URLSearchParams(window.location.search);
+      let label = urlParams.get('label');
+      await loadData(label);
+
+        // Add event listener for the new button
+        document.getElementById('viewListButton').addEventListener('click', () => {
+          window.location.href = `list-data.html?label=${label}`;
+        });
+
+    });
+
+    function returnHome() {
+      window.location.href = "index.html";
+    }
+    window.returnHome = returnHome;
+  </script> 
+
+</head>
+<body>
+  <div class="app">
+    <div class="navbar">
+      Poseidon Shield
+      <button type="button" id="home" onclick="returnHome()">Home</button>
+    </div>
+    <div class="list">
+      <div class="listview-container">
+        <canvas id="dataChart"></canvas>
+        <button id="viewListButton" class="list-button">
+          View Full Data History List
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

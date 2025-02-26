@@ -4,73 +4,100 @@
   <meta charset="utf-8" />
   <link rel="stylesheet" type="text/css" href="app.css" />
   <title>Data Details</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Function to retrieve the existing fields
+    async function loadData(cardId) {
+      try {
+        let response = await fetch(`/data?id=${cardId}`);
+        if (!response.ok) throw new Error(`Failed to fetch data: ${response.statusText}`);
+        return await response.json();
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data. Please try again later.');
+      }
+    }
+
+    function createTimeline(relayChain) {
+      const timeline = document.getElementById('timeline');
+      timeline.innerHTML = '<div class="timeline-connector"></div>';
+      
+      relayChain.forEach((step, index) => {
+        const stepElement = document.createElement('div');
+        stepElement.className = 'timeline-step';
+        stepElement.innerHTML = `
+          <div class="timeline-circle"></div>
+          <div>Board ${step.boardId}</div>
+          <div>${new Date(step.timestamp * 1000).toLocaleTimeString()}</div>
+        `;
+        timeline.appendChild(stepElement);
+      });
+    }
 
     window.addEventListener("load", async () => {
-      let urlParams = new URLSearchParams(window.location.search);
-      let cardId = urlParams.get("id");
+      const urlParams = new URLSearchParams(window.location.search);
+      const dataId = urlParams.get("id");
+      const data = await loadData(dataId);
 
-        let card = await loadTask(cardId)
+      if (data) {
+        // Populate basic fields using divs
+        document.getElementById('sensor-type').textContent = data[0].label;
+        document.getElementById('sensor-value').textContent = data[0].dataValue.split(": ")[1];
+        document.getElementById('timestamp').textContent = 
+          new Date(data[0].timeDataCaptured).toLocaleString();
+        document.getElementById('origin-board').textContent = data[0].boardIdMsgOrigin;
+        document.getElementById('digital-signature').textContent = data[0].digitalSignature;
 
-        // If the card is found, populate the form with the card details
-        if (card) {
-          // Populate the form with the card details deafult html
-          document.getElementById("title").value = card.title;
-          document.getElementById("status").value = card.status;
-          document.getElementById("duedate").value = card.dueDate;
-
-          let form = document.getElementById("details-form");
-          for (let key of Object.keys(card)) {
-            // Skip the default fields
-            if (key !== "_id" && key !== "title" && key !== "status" && key !== "dueDate") {
-              // Create a label for the field
-              let label = document.createElement("label");
-              let capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-              label.innerText = `${capitalizedKey}:`;
-              label.setAttribute("for", key);
-              
-              // Create an input element for the field
-              let input = document.createElement("input");
-              input.id = key;
-              input.type = "text";
-              input.value = card[key];
-      
-              // Append the label and input to the form
-              form.appendChild(label);
-              form.appendChild(input);
-
-            }
-          }
-          // Create a button to save the changes and append it to the form
-          let saveButton = document.createElement("button");
-          saveButton.type = "button";
-          saveButton.innerText = "Save Changes";
-          saveButton.addEventListener("click", saveChanges);
-          form.appendChild(saveButton);
-        }
-        else {
-          alert("Card not found");
-          window.location.href = "index.html";
-        }
-
+        // Create timeline visualization
+        createTimeline(data[0].relayChain);
+      } else {
+        alert("Data entry not found");
+        window.location.href = "index.html";
+      }
     });
 
-
+    function returnHome() {
+      window.location.href = "index.html";
+    }
   </script>
-
 </head>
 <body>
-    <div class="app">
-        <div class="navbar">
-            Edit Card Details
-            <button type ="button" id="home" onclick="returnHome()"> Home</button>
-        </div>
-        <div class="card-details-container" id="card-details-container">
-            <form id="details-form">
-
-            </form>
-        </div>
+  <div class="app">
+    <div class="navbar">
+      Data Details
+      <button type="button" id="home" onclick="returnHome()">Home</button>
     </div>
+    <div class="data-container">
+      <div id="details-form">
+        <!-- Static Fields -->
+        <div class="data-field">
+          <label class="data-label">Sensor Type:</label>
+          <div id="sensor-type" class="data-value"></div>
+        </div>
+        <div class="data-field">
+          <label class="data-label">Value:</label>
+          <div id="sensor-value" class="data-value"></div>
+        </div>
+        <div class="data-field">
+          <label class="data-label">Timestamp:</label>
+          <div id="timestamp" class="data-value"></div>
+        </div>
+        <div class="data-field">
+          <label class="data-label">Origin Board ID:</label>
+          <div id="origin-board" class="data-value"></div>
+        </div>
+
+        <!-- Digital Signature -->
+        <div class="data-field">
+          <label class="data-label">Digital Signature:</label>
+          <div id="digital-signature" class="data-value"></div>
+        </div>
+
+        <!-- Relay Chain Visualization -->
+        <div class="data-field">
+          <label class="data-label">Data Transmission Path:</label>
+          <div class="timeline" id="timeline"></div>
+        </div>
+      </div>
+  </div>
 </body>
 </html>

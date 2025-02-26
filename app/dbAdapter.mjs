@@ -43,17 +43,49 @@ export async function findData(cSetName = 'data', id) {
       }
       else {
         newObjectId = ObjectId.createFromHexString(id);
-      }  
-      // Exclude the id and DataHistoryLog field from the retrival
-      // let options = { projection: { _id: 0 , DataHistoryLog: 0} };
-      // let datum = await collection.findOne({ _id: newObjectId}, options);
-      let datum = await collection.findOne({ _id: newObjectId});
+      }
+      let options = {
+        projection: {
+          "metadata": 1,
+          "payload.timeDataCaptured": 1,
+          "payload.data": 1,
+          "payload.protocol": 1
+        }
+      };
+      let datum = await collection.findOne({ _id: newObjectId }, options);
       await _close_collection();
       return datum;
   } 
   catch (e) {
       console.error('Error finding data:', e);
       return null;
+  }
+}
+
+/**
+* Description: Find data by label
+ 
+* @param {string} cSetName - The name of the collection; the default is 'data'
+* @param {string} label - The label to search for
+* @returns {Array} - Returns an array of data
+ */
+export async function findDataByLabel(cSetName = 'data', label) {
+  try {
+      let collection = await _get_data_collection(cSetName);
+      let options = {
+        projection: {
+          "payload.timeDataCaptured": 1,
+          "payload.data": 1,
+          "payload.protocol": 1
+        }
+      };
+      let data = await collection.find({ "payload.data.label": label }, options).toArray();
+      await _close_collection();
+      return data;
+  }
+  catch (e) {
+      console.error('Error finding data by label:', e);
+      return [];
   }
 }
 
@@ -66,10 +98,7 @@ export async function findData(cSetName = 'data', id) {
 export async function findAllData(cSetName = 'data') {
   try {
       let collection = await _get_data_collection(cSetName);
-      // Exclude the DataHistoryLog field from the retrival
-      // let options = { projection: {DataHistoryLog: 0} };
-      // let data = await collection.find({}, options).toArray();
-      //Exclude certain fields from the retrieval
+      //Include Certain fields only in the retrival
       let options = {
         projection: {
           "payload.timeDataCaptured": 1,
@@ -176,4 +205,4 @@ export async function closeStore() {
 
 
 
-export default { findData, findAllData, deleteSingleData, closeStore};
+export default { findData, findAllData, findDataByLabel, closeStore};
