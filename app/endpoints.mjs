@@ -140,9 +140,6 @@ export async function getLabelSpecificDataForPlottingByTimeForTheLastHour(req, r
     //Filter the data to get all data entries with the specified label
     let labelSpecificDataForPlotting = reformattedData.filter(dataEntry => new Date(dataEntry.timeDataCaptured).getTime() > Date.now() - 3600000);
 
-    let fate = new Date()
-    console.log(fate.toISOString())
-
     //If data are retrieved successfully, return 200 response code
     return resp.status(200).send(labelSpecificDataForPlotting);
   } 
