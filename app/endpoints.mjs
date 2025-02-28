@@ -138,7 +138,10 @@ export async function getLabelSpecificDataForPlottingByTimeForTheLastHour(req, r
     let reformattedData = reformatDataPlot(data, label);
 
     //Filter the data to get all data entries with the specified label
-    let labelSpecificDataForPlotting = reformattedData.filter(dataEntry => dataEntry.timeDataCaptured > Date.now() - 3600000);
+    let labelSpecificDataForPlotting = reformattedData.filter(dataEntry => new Date(dataEntry.timeDataCaptured).getTime() > Date.now() - 3600000);
+
+    let fate = new Date()
+    console.log(fate.toISOString())
 
     //If data are retrieved successfully, return 200 response code
     return resp.status(200).send(labelSpecificDataForPlotting);
@@ -216,7 +219,9 @@ function reformatDataForEntryDisplay(data) {
     let relayChain = data[i].metadata.relayChain;
 
     //Get the Digital Signature
-    let digitalSignature = data[i].metadata.digitalSignature;
+    let digitalSignatureBytes = data[i].metadata.digitalSignature;
+
+    let decodedStr = Buffer.from(digitalSignatureBytes, 'base64').toString('utf8')
 
     // Get Relevant fields from the Payload
     let timeDataCaptured = data[i].payload.timeDataCaptured
@@ -234,7 +239,7 @@ function reformatDataForEntryDisplay(data) {
       _id: data[i]._id,
       boardIdMsgOrigin: boardIdMsgOrigin,
       relayChain: relayChain,
-      digitalSignature: digitalSignature,
+      digitalSignature: decodedStr,
       timeDataCaptured: timeDataCaptured,
       label: label,
       dataValue: dataValue
