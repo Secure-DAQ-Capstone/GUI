@@ -173,6 +173,67 @@ button:hover {
   color: #555;
 }
 
+/* Warning Section */
+.warning-section {
+  background-color: #fffbe6;
+  border: 2px solid #ffe58f;
+  border-radius: 8px;
+  margin: 20px;
+  padding: 15px;
+}
+
+.warning-section h2 {
+  color: #faad14;
+  margin-bottom: 15px;
+}
+
+/* Alert Section */
+.alert-section {
+  background-color: #fff1f0;
+  border: 2px solid #ffa39e;
+  border-radius: 8px;
+  margin: 20px;
+  padding: 15px;
+}
+
+.alert-section h2 {
+  color: #ff4d4f;
+  margin-bottom: 15px;
+}
+
+/* Data Entries */
+.listViewDataEntry {
+  background-color: white;
+  border-radius: 6px;
+  padding: 15px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.listViewDataEntry:hover {
+  transform: translateX(5px);
+}
+
+.warning-entry {
+  border-left: 4px solid #faad14;
+}
+
+.alert-entry {
+  border-left: 4px solid #ff4d4f;
+}
+
+.entry-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.entry-body div {
+  margin: 4px 0;
+  color: #666;
+}
 
 /* Responsive Design */
 @media (max-width: 600px) {
@@ -191,3 +252,4 @@ button:hover {
     text-align: center;
   }
 }
+

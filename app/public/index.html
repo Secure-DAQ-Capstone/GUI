@@ -75,6 +75,13 @@
       await loadData();
 
     });
+
+
+    function returnAlerts() {
+      window.location.href = "alerts.html";
+    }
+
+    window.returnAlerts = returnAlerts;
   </script> 
 
   <!-- Data Entry Template -->
@@ -88,6 +95,7 @@
   <div class="app">
     <div class="navbar">
       Poseidon Shield
+      <button type="button" id="alerts" onclick="returnAlerts()">Alerts</button>
     </div>
     <div class="list">
       <div class="listview-container">
