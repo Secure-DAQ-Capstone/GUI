@@ -37,6 +37,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       const dataId = urlParams.get("id");
       const data = await loadData(dataId);
+      console.log(data);
 
       if (data) {
         // Populate basic fields using divs
@@ -49,6 +50,19 @@
 
         // Create timeline visualization
         createTimeline(data[0].relayChain);
+
+        // Add relay chain validation warning
+        const isValid = data[0].relayChainVerification;
+        if (!isValid) {
+          const warningDiv = document.createElement('div');
+          warningDiv.className = 'warning-section';
+          warningDiv.innerHTML = `
+            <h2>⚠️ Time Sequence Warning</h2>
+            <div>Relay chain timestamps are not in chronological order. 
+            This indicates a potential issue with the data transmission timing or data tampering.</div>
+          `;
+          document.getElementById('details-form').appendChild(warningDiv);
+        }
       } else {
         alert("Data entry not found");
         window.location.href = "index.html";

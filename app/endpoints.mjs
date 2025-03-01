@@ -293,6 +293,7 @@ function reformatDataForEntryDisplay(data) {
       _id: data[i]._id,
       boardIdMsgOrigin: boardIdMsgOrigin,
       relayChain: relayChain,
+      relayChainVerification: compareRelayChainDates(relayChain),
       digitalSignature: decodedStr,
       timeDataCaptured: timeDataCaptured,
       label: label,
@@ -313,4 +314,15 @@ function smoothData(values, windowSize) {
     smoothed.push(avg);
   }
   return smoothed;
+}
+
+function compareRelayChainDates(relayChain) {
+  for (let i = 0; i < relayChain.length - 1; i++) {
+    const currentTime = relayChain[i].timestamp;
+    const nextTime = relayChain[i + 1].timestamp;
+    if (nextTime <= currentTime) {
+      return false;
+    }
+  }
+  return true;
 }
