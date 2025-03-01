@@ -1,4 +1,4 @@
-import {getData, getLatestData, getLabelSpecificData, getLabelSpecificDataForPlottingByTimeForTheLastHour} from "./endpoints.mjs"
+import {getData, getLatestData, getLabelSpecificData, getLabelSpecificDataForPlottingByTimeForTheLastHour, getDataNotVerified} from "./endpoints.mjs"
 import express from 'express';
 import path from 'path'
 
@@ -45,5 +45,10 @@ Required query parameters: label
 Sample request for one label: /data?label=History
 */
 app.get('/plotData', getLabelSpecificDataForPlottingByTimeForTheLastHour);
+
+/*
+API Call to get Data Entries that their Digital Signatures and Decryption were not Successfully Verified.
+*/
+app.get('/dataNotVerified', getDataNotVerified);
 
 export default server 

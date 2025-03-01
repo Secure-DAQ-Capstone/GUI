@@ -1,4 +1,4 @@
-import { findData, findAllData, findDataByLabel} from './dbAdapter.mjs';
+import { findData, findAllData, findDataByLabel, findVerificationFields} from './dbAdapter.mjs';
 
 // API Handler for get '/data' to retrieve specific data if IDs are provided or all data if no ID is provided
 export async function getData(req, resp) {
@@ -149,6 +149,60 @@ export async function getLabelSpecificDataForPlottingByTimeForTheLastHour(req, r
   }
 }
 
+export async function getDataNotVerified(req, resp) {
+  //Look for the field in metadata that is a boolean called signatureVerified
+  try{
+    let data = await findVerificationFields('data');
+
+    let notVerifiedDigitalSignaturesField = data.filter(dataEntry => !dataEntry.metadata.signatureVerified);
+    let notSuccesfulDecryptionField = data.filter(dataEntry => !dataEntry.metadata.decryptionSuccesful);
+
+    //Store the IDs of the not Verified Digital Signatures
+    let notVerifiedDigitalSignaturesIDs = notVerifiedDigitalSignaturesField.map(dataEntry => dataEntry._id); 
+
+    //Convert the IDs to strings
+    notVerifiedDigitalSignaturesIDs = notVerifiedDigitalSignaturesIDs.map(dataEntry => dataEntry.toString());
+
+    //Store the IDs of the not Succesful Decryption
+    let notSuccesfulDecryptionIDs = notSuccesfulDecryptionField.map(dataEntry => dataEntry._id);
+    notSuccesfulDecryptionIDs = notSuccesfulDecryptionIDs.map(dataEntry => dataEntry.toString());
+
+    //Lets fetch the data for each ID in the notVerifiedDigitalSignaturesIDs
+    let dataNotVerifiedDigitalSignatures = [];
+    for(let dataId of notVerifiedDigitalSignaturesIDs) {
+      let dataEntry = await findData('data', dataId);
+      if (dataEntry) {
+        dataNotVerifiedDigitalSignatures.push(dataEntry);
+      }
+    }
+    
+    let dataNotVerifiedDigitalSignaturesReformatted = reformatDataForEntryDisplay(dataNotVerifiedDigitalSignatures);
+
+    //Lets fetch the data for each ID in the notSuccesfulDecryptionIDs
+    let dataNotSuccesfulDecryption = [];
+    for(let dataId of notSuccesfulDecryptionIDs) {
+      let dataEntry = await findData('data', dataId);
+      if (dataEntry) {
+        dataNotSuccesfulDecryption.push(dataEntry);
+      }
+    }
+
+    let  dataNotSuccesfulDecryptionReformatted = reformatDataForEntryDisplay(dataNotSuccesfulDecryption);
+
+    // Construct the new format
+    let dataNotValidated = {
+      notVerifiedDigitalSignatures: dataNotVerifiedDigitalSignaturesReformatted,
+      notSuccesfulDecryption: dataNotSuccesfulDecryptionReformatted
+    };
+
+    resp.status(200).send(dataNotValidated);
+  }
+  catch (e) {
+    //If there is an error, return 500 response code
+    resp.status(500).send('Server Error');
+  }
+};
+
 //Helper function to reformat the data
 function reformatData(data) {
   let reformattedData = [];
@@ -219,6 +273,9 @@ function reformatDataForEntryDisplay(data) {
     let digitalSignatureBytes = data[i].metadata.digitalSignature;
 
     let decodedStr = Buffer.from(digitalSignatureBytes, 'base64').toString('utf8')
+
+    //Get the Public Key
+    let publicKey = data[i].metadata.publicKey;
 
     // Get Relevant fields from the Payload
     let timeDataCaptured = data[i].payload.timeDataCaptured

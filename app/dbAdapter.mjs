@@ -90,6 +90,31 @@ export async function findDataByLabel(cSetName = 'data', label) {
 }
 
 /**
+* Description: Find data fields that need to be verified
+ 
+* @param {string} cSetName - The name of the collection; the default is 'data'
+* @returns {Array} - Returns an array of data
+ */
+export async function findVerificationFields(cSetName = 'data', label) {
+  try {
+      let collection = await _get_data_collection(cSetName);
+      let options = {
+        projection: {
+          "metadata.signatureVerified": 1,
+          "metadata.decryptionSuccesful": 1,
+        }
+      };
+      let data = await collection.find({}, options).toArray();
+      await _close_collection();
+      return data;
+  }
+  catch (e) {
+      console.error('Error finding data by label:', e);
+      return [];
+  }
+}
+
+/**
 * Description: Retrieves all data from the database
 
 * @param {string} cSetName - The name of the collection; the default is 'data'
@@ -118,56 +143,6 @@ export async function findAllData(cSetName = 'data') {
 }
 
 /**
-* Description: Retrieves the data history log for a datum
-
-* @param {string} cSetName - The name of the collection; the default is 'data'
-* @param {string} id - The ID of the data to retrieve the history for
-* @returns {Array} - Returns an array of data history entries
-*/
-// export async function findDataHistory(cSetName = 'data', id) {
-//   try {
-//       let collection = await _get_data_collection(cSetName);
-//       let newObjectId;
-//       if (testing_flag) {
-//         newObjectId = parseInt(id);
-//       }
-//       else {
-//         newObjectId = ObjectId.createFromHexString(id);
-//       }  
-//       // Include the DataHistoryLog field only in the retrival
-//       let options = { projection: { DataHistoryLog: 1, _id: 0 } };
-//       let datumHistory = await collection.findOne({ _id: newObjectId }, options);
-//       await _close_collection();
-//       return datumHistory;
-//   } 
-//   catch (e) {
-//       console.error('Error retrieving data history:', e);
-//       return null;
-//   }
-// }
-
-/**
-* Description: Retrieves all data history entries
-
-* @param {string} cSetName - The name of the collection; the default is 'data'
-* @returns {Array} - Returns an array of data history entries
-*/
-// export async function findAllDataHistory(cSetName = 'data') {
-//   try {
-//       let collection = await _get_data_collection(cSetName);
-//       // Include only the DataHistoryLog field in the retrival
-//       let options = { projection: { DataHistoryLog: 1, _id: 0 } };
-//       let dataHistory = await collection.find({}, options).toArray();
-//       await _close_collection();
-//       return dataHistory;
-//   } 
-//   catch (e) {
-//       console.error('Error retrieving data history:', e);
-//       return [];
-//   }
-// }
-
-/**
 * Description: Deletes a datum by ID
 
 * @param {string} cSetName - The name of the collection; the default is 'data'
@@ -194,7 +169,6 @@ export async function deleteSingleData(cSetName = 'data', id) {
   }
 }
 
-
 /*
 Description: Close the database connection
 */
@@ -203,6 +177,4 @@ export async function closeStore() {
     return 'Connection closed';
 }
 
-
-
-export default { findData, findAllData, findDataByLabel, closeStore};
+export default { findData, findAllData, findDataByLabel, closeStore, findVerificationFields};
