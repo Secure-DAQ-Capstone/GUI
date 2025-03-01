@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="app.css" /> 
+  <title>Poseidon Shield</title>
+
+  <script type="module">
+    async function loadData() { 
+      try {
+        let response = await fetch('/dataNotVerified');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.statusText}`);
+        }
+
+        let data = await response.json();
+
+        // Process notVerifiedDigitalSignatures (Warning)
+        const warningContainer = document.querySelector('.warning-entries');
+        data.notVerifiedDigitalSignatures.forEach(entry => {
+          warningContainer.appendChild(createDataEntry(entry, 'warning'));
+        });
+
+        // Process notSuccesfulDecryption (Alert)
+        const alertContainer = document.querySelector('.alert-entries');
+        data.notSuccesfulDecryption.forEach(entry => {
+          alertContainer.appendChild(createDataEntry(entry, 'alert'));
+        });
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data. Please try again later.');
+      }
+    }
+
+    function createDataEntry(data, type) {
+      const template = document.getElementById('dataEntryTemplate');
+      const clone = template.content.cloneNode(true);
+      const entry = clone.querySelector('.listViewDataEntry');
+      
+      entry.className += ` ${type}-entry`;
+      entry.innerHTML = `
+        <div class="entry-header">
+          <span>Sensor: ${data.label}</span>
+          <span>Board ID: ${data.boardIdMsgOrigin}</span>
+        </div>
+        <div class="entry-body">
+          <div>Value: ${data.dataValue.split(": ")[1]}</div>
+          <div>${new Date(data.timeDataCaptured).toLocaleString()}</div>
+        </div>
+      `;
+
+      entry.addEventListener('click', () => {
+        window.location.href = `details.html?id=${data._id}`;
+      });
+
+      return entry;
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadData();
+    });
+
+    function returnHome() {
+      window.location.href = "index.html";
+    }
+
+    window.returnHome = returnHome;
+  </script> 
+
+  <!-- Data Entry Template -->
+  <template id="dataEntryTemplate">
+    <div class="listViewDataEntry">
+    </div>
+  </template>
+
+</head>
+<body>
+  <div class="app">
+    <div class="navbar">
+      Poseidon Shield
+      <button type="button" id="home" onclick="returnHome()">Home</button>
+    </div>
+    <div class="list">
+      <div class="listview-container">
+        <!-- Warning Section -->
+        <div class="warning-section">
+          <h2>⚠️ Unverified Digital Signatures</h2>
+          <div class="warning-entries"></div>
+        </div>
+
+        <!-- Alert Section -->
+        <div class="alert-section">
+          <h2>🚨 Decryption Failures</h2>
+          <div class="alert-entries"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
