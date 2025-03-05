@@ -101,7 +101,7 @@ export async function findVerificationFields(cSetName = 'data', label) {
       let options = {
         projection: {
           "metadata.signatureVerified": 1,
-          "metadata.decryptionSuccesful": 1,
+          "metadata.decryptionSucceeded": 1,
         }
       };
       let data = await collection.find({}, options).toArray();

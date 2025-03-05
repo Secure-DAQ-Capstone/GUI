@@ -155,7 +155,7 @@ export async function getDataNotVerified(req, resp) {
     let data = await findVerificationFields('data');
 
     let notVerifiedDigitalSignaturesField = data.filter(dataEntry => !dataEntry.metadata.signatureVerified);
-    let notSuccesfulDecryptionField = data.filter(dataEntry => !dataEntry.metadata.decryptionSuccesful);
+    let notSuccesfulDecryptionField = data.filter(dataEntry => !dataEntry.metadata.decryptionSucceeded);
 
     //Store the IDs of the not Verified Digital Signatures
     let notVerifiedDigitalSignaturesIDs = notVerifiedDigitalSignaturesField.map(dataEntry => dataEntry._id); 
@@ -165,6 +165,8 @@ export async function getDataNotVerified(req, resp) {
 
     //Store the IDs of the not Succesful Decryption
     let notSuccesfulDecryptionIDs = notSuccesfulDecryptionField.map(dataEntry => dataEntry._id);
+
+    //Convert the IDs to strings
     notSuccesfulDecryptionIDs = notSuccesfulDecryptionIDs.map(dataEntry => dataEntry.toString());
 
     //Lets fetch the data for each ID in the notVerifiedDigitalSignaturesIDs
