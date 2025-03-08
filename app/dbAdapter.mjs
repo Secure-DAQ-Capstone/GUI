@@ -90,12 +90,38 @@ export async function findDataByLabel(cSetName = 'data', label) {
 }
 
 /**
+* Description: Find data fields that need to be verified based on a specific label
+ 
+* @param {string} cSetName - The name of the collection; the default is 'data'
+* @param {string} label - The label to search for
+* @returns {Array} - Returns an array of data
+ */
+export async function findLabelSpecificVerificationFields(cSetName = 'data', label) {
+  try {
+      let collection = await _get_data_collection(cSetName);
+      let options = {
+        projection: {
+          "metadata.signatureVerified": 1,
+          "metadata.decryptionSucceeded": 1,
+        }
+      };
+      let data = await collection.find({"payload.data.label": label}, options).toArray();
+      await _close_collection();
+      return data;
+  }
+  catch (e) {
+      console.error('Error finding data by label:', e);
+      return [];
+  }
+}
+
+/**
 * Description: Find data fields that need to be verified
  
 * @param {string} cSetName - The name of the collection; the default is 'data'
 * @returns {Array} - Returns an array of data
- */
-export async function findVerificationFields(cSetName = 'data', label) {
+*/
+export async function findAllVerificationFields(cSetName = 'data') {
   try {
       let collection = await _get_data_collection(cSetName);
       let options = {
@@ -177,4 +203,4 @@ export async function closeStore() {
     return 'Connection closed';
 }
 
-export default { findData, findAllData, findDataByLabel, closeStore, findVerificationFields};
+export default { findData, findAllData, findDataByLabel, closeStore, findLabelSpecificVerificationFields, findAllVerificationFields};

@@ -35,19 +35,21 @@ app.get('/latestData', getLatestData);
 /*
 API Call to get all data entries of a specific label.
 Required query parameters: label
-Sample request for one label: /data?label=History
+Sample request for one label: /labelSpecificData?label=History
 */
 app.get('/labelSpecificData', getLabelSpecificData);
 
 /*
 API Call to get data of the last hour for a specific label for plotting:
 Required query parameters: label
-Sample request for one label: /data?label=History
+Sample request for one label: /plotData?label=History
 */
 app.get('/plotData', getLabelSpecificDataForPlottingByTimeForTheLastHour);
 
 /*
-API Call to get Data Entries that their Digital Signatures and Decryption were not Successfully Verified.
+API Call to get all Data Entries that their Digital Signatures and Decryption were not Successfully Verified.
+Sample request for multiple datum: /dataNotVerified?label=Humidity
+Sample request for all data: /dataNotVerified (if no label passed all data are retrieved)
 */
 app.get('/dataNotVerified', getDataNotVerified);
 

@@ -1,4 +1,4 @@
-import { findData, findAllData, findDataByLabel, findVerificationFields} from './dbAdapter.mjs';
+import { findData, findAllData, findDataByLabel, findLabelSpecificVerificationFields, findAllVerificationFields} from './dbAdapter.mjs';
 
 // API Handler for get '/data' to retrieve specific data if IDs are provided or all data if no ID is provided
 export async function getData(req, resp) {
@@ -152,7 +152,20 @@ export async function getLabelSpecificDataForPlottingByTimeForTheLastHour(req, r
 export async function getDataNotVerified(req, resp) {
   //Look for the field in metadata that is a boolean called signatureVerified
   try{
-    let data = await findVerificationFields('data');
+
+    //Retrieve the label from the request query
+    let label = req.query.label;
+
+    //Initalize Data
+    let data;
+
+    //Check if the required field was passed in the request body
+    if (!label) {
+      data = await findAllVerificationFields('data');
+    }
+    else{
+      data = await findLabelSpecificVerificationFields('data', label)
+    }
 
     let notVerifiedDigitalSignaturesField = data.filter(dataEntry => !dataEntry.metadata.signatureVerified);
     let notSuccesfulDecryptionField = data.filter(dataEntry => !dataEntry.metadata.decryptionSucceeded);
