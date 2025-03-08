@@ -167,8 +167,6 @@ export async function getDataNotVerified(req, resp) {
       data = await findLabelSpecificVerificationFields('data', label)
     }
 
-    console.log(data[0].metadata.relayChain);
-
     let notVerifiedDigitalSignaturesField = data.filter(dataEntry => !dataEntry.metadata.signatureVerified);
     let notSuccesfulDecryptionField = data.filter(dataEntry => !dataEntry.metadata.decryptionSucceeded);
     let relayChainTimeVerificationFilter = data.filter(dataEntry => {

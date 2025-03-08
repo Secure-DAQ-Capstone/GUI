@@ -29,6 +29,12 @@
           document.querySelector('.alert-entries')
             .appendChild(createDataEntry(entry, 'alert'));
         });
+
+       // Populate relays
+        data.relayChainTimeVerification.forEach(entry => {
+          document.querySelector('.relay-entries')
+            .appendChild(createDataEntry(entry, 'relay'));
+        }); 
         
       } catch (error) {
         console.error('Error loading alerts:', error);
@@ -175,6 +181,10 @@
             <h2>🚨 Decryption Failures</h2>
             <div class="alert-entries"></div>
           </div>
+          <div class="relay-section">
+            <h2>⏰ Time Sequence Warnings</h2>
+            <div class="relay-entries"></div>
+          </div>          
         </div>
       </div>
     </div>
