@@ -103,6 +103,7 @@ export async function findLabelSpecificVerificationFields(cSetName = 'data', lab
         projection: {
           "metadata.signatureVerified": 1,
           "metadata.decryptionSucceeded": 1,
+          "metadata.relayChain": 1
         }
       };
       let data = await collection.find({"payload.data.label": label}, options).toArray();
@@ -128,6 +129,7 @@ export async function findAllVerificationFields(cSetName = 'data') {
         projection: {
           "metadata.signatureVerified": 1,
           "metadata.decryptionSucceeded": 1,
+          "metadata.relayChain": 1
         }
       };
       let data = await collection.find({}, options).toArray();

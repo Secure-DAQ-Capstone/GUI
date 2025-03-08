@@ -27,6 +27,12 @@
           alertContainer.appendChild(createDataEntry(entry, 'alert'));
         });
 
+        // Process timeSequenceWarnings (Relay)
+        const relayContainer = document.querySelector('.relay-entries');
+        data.relayChainTimeVerification.forEach(entry => {
+          relayContainer.appendChild(createDataEntry(entry, 'relay'));
+        });
+
       } catch (error) {
         console.error('Error loading data:', error);
         alert('Failed to load data. Please try again later.');
@@ -93,6 +99,10 @@
         <div class="alert-section">
           <h2>🚨 Decryption Failures</h2>
           <div class="alert-entries"></div>
+        </div>
+        <div class="relay-section">
+          <h2>⏰ Time Sequence Warnings</h2>
+          <div class="relay-entries"></div>
         </div>
       </div>
     </div>

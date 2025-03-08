@@ -167,20 +167,35 @@ export async function getDataNotVerified(req, resp) {
       data = await findLabelSpecificVerificationFields('data', label)
     }
 
+    console.log(data[0].metadata.relayChain);
+
     let notVerifiedDigitalSignaturesField = data.filter(dataEntry => !dataEntry.metadata.signatureVerified);
     let notSuccesfulDecryptionField = data.filter(dataEntry => !dataEntry.metadata.decryptionSucceeded);
+    let relayChainTimeVerificationFilter = data.filter(dataEntry => {
+      let relayChain = dataEntry.metadata.relayChain;
+    
+      // If relayChain is empty or has only one entry, it automatically passes
+      if (!relayChain || relayChain.length <= 1) return false;
+    
+      // Check if timestamps are non-decreasing
+      for (let i = 1; i < relayChain.length; i++) {
+        if (relayChain[i].timestamp < relayChain[i - 1].timestamp) {
+          return true; // This dataEntry fails the verification
+        }
+      }
+      return false; // This dataEntry passes the verification
+    });
 
-    //Store the IDs of the not Verified Digital Signatures
+    //Store the IDs of the not Verified Digital Signatures and  Convert the IDs to strings
     let notVerifiedDigitalSignaturesIDs = notVerifiedDigitalSignaturesField.map(dataEntry => dataEntry._id); 
-
-    //Convert the IDs to strings
     notVerifiedDigitalSignaturesIDs = notVerifiedDigitalSignaturesIDs.map(dataEntry => dataEntry.toString());
 
-    //Store the IDs of the not Succesful Decryption
+    //Store the IDs of the not Succesful Decryption and Convert the IDs to strings
     let notSuccesfulDecryptionIDs = notSuccesfulDecryptionField.map(dataEntry => dataEntry._id);
-
-    //Convert the IDs to strings
     notSuccesfulDecryptionIDs = notSuccesfulDecryptionIDs.map(dataEntry => dataEntry.toString());
+
+    let relayChainTimeVerificationIDs = relayChainTimeVerificationFilter.map(dataEntry => dataEntry._id);
+    relayChainTimeVerificationIDs = relayChainTimeVerificationIDs.map(dataEntry => dataEntry.toString());
 
     //Lets fetch the data for each ID in the notVerifiedDigitalSignaturesIDs
     let dataNotVerifiedDigitalSignatures = [];
@@ -204,10 +219,22 @@ export async function getDataNotVerified(req, resp) {
 
     let  dataNotSuccesfulDecryptionReformatted = reformatDataForEntryDisplay(dataNotSuccesfulDecryption);
 
+    //Lets fetch the data for each ID in the relayChainTimeVerificationIDs
+    let dataRelayChainTimeVerification = [];
+    for(let dataId of relayChainTimeVerificationIDs) {
+      let dataEntry = await findData('data', dataId);
+      if (dataEntry) {
+        dataRelayChainTimeVerification.push(dataEntry);
+      }
+    }
+
+    let  dataRelayChainTimeVerificationReformatted = reformatDataForEntryDisplay(dataRelayChainTimeVerification);
+
     // Construct the new format
     let dataNotValidated = {
       notVerifiedDigitalSignatures: dataNotVerifiedDigitalSignaturesReformatted,
-      notSuccesfulDecryption: dataNotSuccesfulDecryptionReformatted
+      notSuccesfulDecryption: dataNotSuccesfulDecryptionReformatted,
+      relayChainTimeVerification: dataRelayChainTimeVerificationReformatted
     };
 
     resp.status(200).send(dataNotValidated);

@@ -7,6 +7,59 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script type="module">
+    async function loadAlerts(labelname) {
+      try {
+        let response = await fetch(`/dataNotVerified?label=${labelname}`);
+        if (!response.ok) throw new Error(`Failed to fetch alerts: ${response.statusText}`);
+        
+        let data = await response.json();
+        
+        // Clear previous entries
+        document.querySelector('.warning-entries').innerHTML = '';
+        document.querySelector('.alert-entries').innerHTML = '';
+        
+        // Populate warnings
+        data.notVerifiedDigitalSignatures.forEach(entry => {
+          document.querySelector('.warning-entries')
+            .appendChild(createDataEntry(entry, 'warning'));
+        });
+        
+        // Populate alerts
+        data.notSuccesfulDecryption.forEach(entry => {
+          document.querySelector('.alert-entries')
+            .appendChild(createDataEntry(entry, 'alert'));
+        });
+        
+      } catch (error) {
+        console.error('Error loading alerts:', error);
+        alert('Failed to load alerts. Please try again later.');
+      }
+    }
+
+    function createDataEntry(data, type) {
+      const template = document.getElementById('dataEntryTemplate');
+      const clone = template.content.cloneNode(true);
+      const entry = clone.querySelector('.listViewDataEntry');
+      
+      entry.className += ` ${type}-entry`;
+      entry.innerHTML = `
+        <div class="entry-header">
+          <span>Sensor: ${data.label}</span>
+          <span>Board ID: ${data.boardIdMsgOrigin}</span>
+        </div>
+        <div class="entry-body">
+          <div>Value: ${data.dataValue.split(": ")[1]}</div>
+          <div>${new Date(data.timeDataCaptured).toLocaleString()}</div>
+        </div>
+      `;
+
+      entry.addEventListener('click', () => {
+        window.location.href = `data-details.html?id=${data._id}`;
+      });
+
+      return entry;
+    }
+
     async function loadData(labelname) { 
       try {
         let response = await fetch(`/plotData?label=${labelname}`);
@@ -73,12 +126,18 @@
     document.addEventListener("DOMContentLoaded", async () => {
       let urlParams = new URLSearchParams(window.location.search);
       let label = urlParams.get('label');
-      await loadData(label);
 
-        // Add event listener for the new button
-        document.getElementById('viewListButton').addEventListener('click', () => {
-          window.location.href = `list-data.html?label=${label}`;
-        });
+      const formattedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      document.getElementById('sensorLabel').innerText = `${formattedLabel} Sensor Data`;
+
+
+      await loadData(label);
+      await loadAlerts(label);
+
+      // Add event listener for the new button
+      document.getElementById('viewListButton').addEventListener('click', () => {
+        window.location.href = `list-data.html?label=${label}`;
+      });
 
     });
 
@@ -87,6 +146,10 @@
     }
     window.returnHome = returnHome;
   </script> 
+
+<template id="dataEntryTemplate">
+  <div class="listViewDataEntry"></div>
+</template>
 
 </head>
 <body>
@@ -97,10 +160,22 @@
     </div>
     <div class="list">
       <div class="listview-container">
+        <h3 id="sensorLabel"></h3>
         <canvas id="dataChart"></canvas>
         <button id="viewListButton" class="list-button">
           View Full Data History List
         </button>
+        <!-- Alert Sections -->
+        <div class="alert-sections">
+          <div class="warning-section">
+            <h2>⚠️ Unverified Digital Signatures</h2>
+            <div class="warning-entries"></div>
+          </div>
+          <div class="alert-section">
+            <h2>🚨 Decryption Failures</h2>
+            <div class="alert-entries"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -185,6 +185,7 @@ button:hover {
 .warning-section h2 {
   color: #faad14;
   margin-bottom: 15px;
+  border-bottom: 2px solid #ffd666;
 }
 
 /* Alert Section */
@@ -199,7 +200,24 @@ button:hover {
 .alert-section h2 {
   color: #ff4d4f;
   margin-bottom: 15px;
+  border-bottom: 2px solid #ffccc7;
 }
+
+/* Time Warning Section */
+.relay-section {
+  background-color: #f5e6ff;  /* Light lavender background */
+  border: 2px solid #e0b3ff;  /* Medium purple border */
+  border-radius: 8px;
+  margin: 20px;
+  padding: 15px;
+}
+
+.relay-section h2 {
+  color: #8c1aff;  /* Vibrant purple */
+  margin-bottom: 15px;
+  border-bottom: 2px solid #d9b3ff; /* Light purple underline */
+}
+
 
 /* Data Entries */
 .listViewDataEntry {
@@ -221,6 +239,10 @@ button:hover {
 
 .alert-entry {
   border-left: 4px solid #ff4d4f;
+}
+
+.relay-entry {
+  border-left: 4px solid #8c1aff;
 }
 
 .entry-header {
