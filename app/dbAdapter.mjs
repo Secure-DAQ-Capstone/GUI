@@ -49,7 +49,8 @@ export async function findData(cSetName = 'data', id) {
           "metadata": 1,
           "payload.timeDataCaptured": 1,
           "payload.data": 1,
-          "payload.protocol": 1
+          "payload.protocol": 1,
+          "encryptedPayload": 1
         }
       };
       let datum = await collection.findOne({ _id: newObjectId }, options);
@@ -156,7 +157,8 @@ export async function findAllData(cSetName = 'data') {
         projection: {
           "payload.timeDataCaptured": 1,
           "payload.data": 1,
-          "payload.protocol": 1
+          "payload.protocol": 1,
+          "metadata.decryptionSucceeded": 1
         }
       };
       let data = await collection.find({}, options).toArray();

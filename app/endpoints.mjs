@@ -64,22 +64,25 @@ export async function getLatestData(req, resp) {
   
       //Iterate over all data entries
       for (let dataEntry of data) {
-        let label = dataEntry.payload.data.label;
+        if(dataEntry.metadata.decryptionSucceeded)
+        {
+          let label = dataEntry.payload.data.label;
   
-        //If the label is not in the map, add it
-        if (!latestData.has(label)) {
-          latestData.set(label, dataEntry);
-        }
-        else {
-          //If the label is in the map, compare the time data captured
-          let existingData = latestData.get(label);
-          let newData = dataEntry;
-  
-          //If the new data has a later time data captured, replace the existing data
-          if (newData.payload.timeDataCaptured > existingData.payload.timeDataCaptured) {
-            latestData.set(label, newData);
+          //If the label is not in the map, add it
+          if (!latestData.has(label)) {
+            latestData.set(label, dataEntry);
           }
-        }
+          else {
+            //If the label is in the map, compare the time data captured
+            let existingData = latestData.get(label);
+            let newData = dataEntry;
+    
+            //If the new data has a later time data captured, replace the existing data
+            if (newData.payload.timeDataCaptured > existingData.payload.timeDataCaptured) {
+              latestData.set(label, newData);
+            }
+          }
+        }        
       }
   
       //Convert the map to an array and return the latest data entry for each unique label
@@ -199,7 +202,7 @@ export async function getDataNotVerified(req, resp) {
     let dataNotVerifiedDigitalSignatures = [];
     for(let dataId of notVerifiedDigitalSignaturesIDs) {
       let dataEntry = await findData('data', dataId);
-      if (dataEntry) {
+      if (dataEntry && dataEntry.metadata.decryptionSucceeded) {
         dataNotVerifiedDigitalSignatures.push(dataEntry);
       }
     }
@@ -312,21 +315,32 @@ function reformatDataForEntryDisplay(data) {
     //Get the Digital Signature
     let digitalSignatureBytes = data[i].metadata.digitalSignature;
 
-    let decodedStr = Buffer.from(digitalSignatureBytes, 'base64').toString('utf8')
-
     //Get the Public Key
     let publicKey = data[i].metadata.publicKey;
 
-    // Get Relevant fields from the Payload
-    let timeDataCaptured = data[i].payload.timeDataCaptured
+    let timeDataCaptured;
+    let label;
+    let dataValue;
+    if(data[i].metadata.decryptionSucceeded)
+    {
+      timeDataCaptured = data[i].payload.timeDataCaptured
 
-    let payload = data[i].payload.data;
-    let label = payload.label;
-    let dataEntries = payload.data.map(entry => {
-      let { ['@type']: _, ...values } = entry;
-      return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
-    });
-    let dataValue = dataEntries.join(" | ");
+      let payload = data[i].payload.data;
+      label = payload.label;
+      let dataEntries = payload.data.map(entry => {
+        let { ['@type']: _, ...values } = entry;
+        return Object.entries(values).map(([key, value]) => `${key}: ${value}`).join(", ");
+      });
+      // Get Relevant fields from the Payload
+    
+      dataValue = dataEntries.join(" | ");
+    }
+    else
+    {
+      timeDataCaptured = "";
+      label = "";
+      dataValue = data[i].encryptedPayload;
+    }
 
     // Construct the new format
     let newEntry = {
@@ -334,7 +348,7 @@ function reformatDataForEntryDisplay(data) {
       boardIdMsgOrigin: boardIdMsgOrigin,
       relayChain: relayChain,
       relayChainVerification: compareRelayChainDates(relayChain),
-      digitalSignature: decodedStr,
+      digitalSignature: digitalSignatureBytes,
       timeDataCaptured: timeDataCaptured,
       label: label,
       dataValue: dataValue
