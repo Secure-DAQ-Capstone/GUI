@@ -28,7 +28,9 @@
 
       // Set the class for the timeline circle based on relayValid
       const circleElement = document.createElement('div');
-      circleElement.className = !relayValid && relayIndexError !== index ? 'timeline-circle' : 'timeline-circle-warning';
+      circleElement.className = relayValid || relayIndexError != index ? 'timeline-circle' : 'timeline-circle-warning';
+
+      console.log(relayValid && relayIndexError != index, index, relayIndexError)
       
       // Add the circle to the step
       stepElement.appendChild(circleElement);
