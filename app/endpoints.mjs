@@ -318,6 +318,8 @@ function reformatDataForEntryDisplay(data) {
     //Get the Public Key
     let publicKey = data[i].metadata.publicKey;
 
+    //Get the MetaData
+
     let timeDataCaptured;
     let label;
     let dataValue;
@@ -342,12 +344,18 @@ function reformatDataForEntryDisplay(data) {
       dataValue = data[i].encryptedPayload;
     }
 
+    //Check Relays
+    let confirmationRelay = compareRelayChainDates(relayChain)
+
     // Construct the new format
     let newEntry = {
       _id: data[i]._id,
       boardIdMsgOrigin: boardIdMsgOrigin,
       relayChain: relayChain,
-      relayChainVerification: compareRelayChainDates(relayChain),
+      relayChainVerification: confirmationRelay.isValid,
+      realyChainIndexError: confirmationRelay.failedIndex,
+      digitalSignatureVerification: data[i].metadata.signatureVerified,
+      decryptionVerification: data[i].metadata.decryptionSucceeded,
       digitalSignature: digitalSignatureBytes,
       timeDataCaptured: timeDataCaptured,
       label: label,
@@ -375,8 +383,14 @@ function compareRelayChainDates(relayChain) {
     const currentTime = relayChain[i].timestamp;
     const nextTime = relayChain[i + 1].timestamp;
     if (nextTime <= currentTime) {
-      return false;
+      return {
+        isValid: false,
+        failedIndex: i+1 
+      };
     }
   }
-  return true;
+  return {
+    isValid: true, 
+    failedIndex: -1 
+  };
 }

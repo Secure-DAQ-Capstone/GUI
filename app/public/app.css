@@ -168,6 +168,16 @@ button:hover {
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
 }
 
+.timeline-circle-warning {
+  width: 25px;
+  height: 25px;
+  background: #ff4d4f;
+  border-radius: 50%;
+  margin: 0 auto 8px;
+  border: 3px solid white;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+}
+
 .timeline-step div {
   font-size: 14px;
   color: #555;

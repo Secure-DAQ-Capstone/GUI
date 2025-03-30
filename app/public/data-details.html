@@ -10,6 +10,7 @@
       try {
         let response = await fetch(`/data?id=${cardId}`);
         if (!response.ok) throw new Error(`Failed to fetch data: ${response.statusText}`);
+        
         return await response.json();
       } catch (error) {
         console.error('Error loading data:', error);
@@ -17,18 +18,27 @@
       }
     }
 
-    function createTimeline(relayChain) {
+    function createTimeline(relayChain, relayValid, relayIndexError) {
       const timeline = document.getElementById('timeline');
       timeline.innerHTML = '<div class="timeline-connector"></div>';
       
       relayChain.forEach((step, index) => {
         const stepElement = document.createElement('div');
         stepElement.className = 'timeline-step';
-        stepElement.innerHTML = `
-          <div class="timeline-circle"></div>
-          <div>Board ${step.boardId}</div>
-          <div>${new Date(step.timestamp * 1000).toLocaleTimeString()}</div>
-        `;
+
+      // Set the class for the timeline circle based on relayValid
+      const circleElement = document.createElement('div');
+      circleElement.className = !relayValid && relayIndexError !== index ? 'timeline-circle' : 'timeline-circle-warning';
+      
+      // Add the circle to the step
+      stepElement.appendChild(circleElement);
+      
+      // Add the rest of the step details
+      stepElement.innerHTML += `
+        <div>Board ${step.boardId}</div>
+        <div>${new Date(step.timestamp * 1000).toLocaleTimeString()}</div>
+      `;
+
         timeline.appendChild(stepElement);
       });
     }
@@ -49,19 +59,47 @@
         document.getElementById('digital-signature').textContent = data[0].digitalSignature;
 
         // Create timeline visualization
-        createTimeline(data[0].relayChain);
+        const isRelayValid = data[0].relayChainVerification;
+        createTimeline(data[0].relayChain, isRelayValid, data[0].realyChainIndexError);
+
+        //Add Digitial Signature Validation Waring
+        const isSignatureValid = data[0].digitalSignatureVerification;
+        if (!isSignatureValid) {
+          const signatureWarningDiv = document.createElement('div');
+          signatureWarningDiv.className = 'warning-section';
+          signatureWarningDiv.innerHTML = `
+            <h2>⚠️ Unverified Digital Signature</h2>
+            <div>The digital signature has been manipulated or a new entity is present. 
+            This requires the digital signature to be re-added to the aggregation node to ensure authenticity.</div>
+          `;
+          document.getElementById('details-form').appendChild(signatureWarningDiv);
+        }
+        
+
+        //Add Decryption Failure Alert
+        const isDecryptionValid = data[0].digitalSignatureVerification;
+        if (!isDecryptionValid) {
+          const decryptionAlertDiv = document.createElement('div');
+          decryptionAlertDiv.className = 'alert-section';
+          decryptionAlertDiv.innerHTML = `
+            <h2>🚨 Decryption Failure</h2>
+            <div>The data appears to have been tampered with, or the symmetric key has been modified. 
+            The integrity of the data cannot be verified and it is no longer safe to trust.</div>
+          `;
+          document.getElementById('details-form').appendChild(decryptionAlertDiv);
+        }
 
         // Add relay chain validation warning
-        const isValid = data[0].relayChainVerification;
-        if (!isValid) {
-          const warningDiv = document.createElement('div');
-          warningDiv.className = 'warning-section';
-          warningDiv.innerHTML = `
-            <h2>⚠️ Time Sequence Warning</h2>
+
+        if (!isRelayValid) {
+          const timeWarningDiv = document.createElement('div');
+          timeWarningDiv.className = 'relay-section';
+          timeWarningDiv.innerHTML = `
+            <h2>⏰ Time Sequence Warning</h2>
             <div>Relay chain timestamps are not in chronological order. 
             This indicates a potential issue with the data transmission timing or data tampering.</div>
           `;
-          document.getElementById('details-form').appendChild(warningDiv);
+          document.getElementById('details-form').appendChild(timeWarningDiv);
         }
       } else {
         alert("Data entry not found");

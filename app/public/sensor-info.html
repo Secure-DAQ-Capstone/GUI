@@ -17,6 +17,7 @@
         // Clear previous entries
         document.querySelector('.warning-entries').innerHTML = '';
         document.querySelector('.alert-entries').innerHTML = '';
+        document.querySelector('.relay-entries').innerHTML = '';
         
         // Populate warnings
         data.notVerifiedDigitalSignatures.forEach(entry => {
@@ -30,7 +31,7 @@
             .appendChild(createDataEntry(entry, 'alert'));
         });
 
-       // Populate relays
+        // Populate relays
         data.relayChainTimeVerification.forEach(entry => {
           document.querySelector('.relay-entries')
             .appendChild(createDataEntry(entry, 'relay'));
@@ -79,9 +80,14 @@
         let values = dataList.map(item => item.dataValue);
         let ids = dataList.map(item => item._id); // Get IDs for click handling
   
+        // Clear existing chart if it exists
+        if (window.myChart) {
+          window.myChart.destroy();
+        }
+
         // Create Chart
         let ctx = document.getElementById('dataChart').getContext('2d');
-        new Chart(ctx, {
+        window.myChart = new Chart(ctx, {
           type: 'line',
           data: {
             labels: labels,
@@ -136,15 +142,20 @@
       const formattedLabel = label.charAt(0).toUpperCase() + label.slice(1);
       document.getElementById('sensorLabel').innerText = `${formattedLabel} Sensor Data`;
 
-
+      // Initial load
       await loadData(label);
       await loadAlerts(label);
+
+      // Set interval for periodic updates
+      setInterval(async () => {
+        await loadData(label);
+        await loadAlerts(label);
+      }, 5000); // 5000 milliseconds = 5 seconds
 
       // Add event listener for the new button
       document.getElementById('viewListButton').addEventListener('click', () => {
         window.location.href = `list-data.html?label=${label}`;
       });
-
     });
 
     function returnHome() {
@@ -153,10 +164,9 @@
     window.returnHome = returnHome;
   </script> 
 
-<template id="dataEntryTemplate">
-  <div class="listViewDataEntry"></div>
-</template>
-
+  <template id="dataEntryTemplate">
+    <div class="listViewDataEntry"></div>
+  </template>
 </head>
 <body>
   <div class="app">
@@ -191,4 +201,3 @@
   </div>
 </body>
 </html>
-
